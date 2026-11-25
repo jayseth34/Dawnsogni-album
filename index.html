@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DAWN SOGNI — VOL. I</title>
+  <meta name="description" content="Dawn Sogni — Music, Visuals, Drops, Shop." />
+  <meta name="theme-color" content="#050505" />
+  <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Pinyon+Script&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ENTER GATE -->
+  <div id="gate" class="gate">
+    <canvas id="gate-smoke"></canvas>
+    <div class="gate-inner">
+      <img src="assets/ds-logo-dark.png" alt="Dawn Sogni" class="gate-logo chrome-shine" />
+      <button id="enter-btn" class="btn btn-ghost">ENTER</button>
+      <p class="gate-script script-glow">Dawn Sogni</p>
+      <p class="mono tiny dim">Sound on for the full experience</p>
+    </div>
+  </div>
+
+  <div class="amber-bg"></div>
+  <canvas id="bg-smoke" class="bg-smoke"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav-logo"><img src="assets/ds-logo-sm.png" alt="DS" /></a>
+    <nav class="nav-links" id="nav-links">
+      <a href="#music">MUSIC</a>
+      <a href="#visuals">VISUALS</a>
+      <a href="#drops">DROPS</a>
+      <a href="#shop">SHOP</a>
+      <a href="#custom">CUSTOM</a>
+    </nav>
+    <button class="cart-btn mono" id="cart-btn">BAG (<span id="cart-count">0</span>)</button>
+    <button class="burger" id="burger" aria-label="Menu"><span></span><span></span></button>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-logo-wrap" id="hero-tilt">
+        <img src="assets/ds-logo-dark.png" alt="Dawn Sogni" class="hero-logo chrome-shine" />
+      </div>
+      <h1 class="hero-title"><span class="dim">THE ALBUM</span><br /><span id="album-title" class="script-glow">Sogni Vol. I</span></h1>
+      <div class="countdown mono" id="countdown">
+        <div><b id="cd-d">00</b><span>DAYS</span></div>
+        <div><b id="cd-h">00</b><span>HRS</span></div>
+        <div><b id="cd-m">00</b><span>MIN</span></div>
+        <div><b id="cd-s">00</b><span>SEC</span></div>
+      </div>
+      <p class="mono tiny dim" id="release-label"></p>
+      <div class="hero-cta">
+        <a href="#music" class="btn">LISTEN</a>
+        <a href="#shop" class="btn btn-ghost">SHOP THE DROP</a>
+      </div>
+      <div class="scroll-hint mono tiny">SCROLL</div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee"><div class="marquee-track mono" id="marquee"></div></div>
+
+    <!-- MUSIC -->
+    <section class="section" id="music">
+      <h2 class="section-title reveal">Music</h2>
+      <div class="album reveal">
+        <div class="album-art-wrap">
+          <div class="vinyl" id="vinyl"><div class="vinyl-label"><img src="assets/ds-logo-sm.png" alt="" /></div></div>
+          <div class="album-art" id="album-art">
+            <img src="assets/ds-logo-dark.png" alt="Album cover" />
+            <span class="art-script script-glow">Sogni</span><span class="art-caption mono">VOL. I</span>
+          </div>
+        </div>
+        <div class="player">
+          <div class="now mono tiny dim">NOW PLAYING</div>
+          <div class="now-title script-glow" id="now-title">—</div>
+          <canvas id="viz" class="viz"></canvas>
+          <div class="progress" id="progress"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="times mono tiny dim"><span id="t-cur">0:00</span><span id="t-dur">0:00</span></div>
+          <div class="controls">
+            <button id="prev" aria-label="Previous">⏮</button>
+            <button id="play" class="play" aria-label="Play">▶</button>
+            <button id="next" aria-label="Next">⏭</button>
+          </div>
+          <ol class="tracklist mono" id="tracklist"></ol>
+          <div class="stream-links mono tiny">
+            <a href="#" target="_blank" rel="noopener">SPOTIFY</a>
+            <a href="#" target="_blank" rel="noopener">APPLE MUSIC</a>
+            <a href="#" target="_blank" rel="noopener">YOUTUBE</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISUALS -->
+    <section class="section" id="visuals">
+      <h2 class="section-title reveal">Visuals</h2>
+      <div class="visual-grid" id="visual-grid"></div>
+    </section>
+
+    <!-- DROPS / TOUR -->
+    <section class="section" id="drops">
+      <h2 class="section-title reveal">Drops &amp; Events</h2>
+      <ul class="drops mono" id="drop-list"></ul>
+    </section>
+
+    <!-- SHOP -->
+    <section class="section" id="shop">
+      <h2 class="section-title reveal">Shop</h2>
+      <div class="shop-grid" id="shop-grid"></div>
+    </section>
+
+    <!-- CUSTOM -->
+    <section class="section custom" id="custom">
+      <h2 class="section-title reveal">Custom Orders</h2>
+      <p class="lead reveal">Your idea. Our chrome. One-of-one pieces made to order.</p>
+      <form class="custom-form reveal" id="custom-form">
+        <input name="name" placeholder="NAME" required />
+        <input name="contact" placeholder="EMAIL / INSTAGRAM" required />
+        <select name="piece" required>
+          <option value="">PIECE</option>
+          <option>Tee</option><option>Hoodie</option><option>Jacket</option><option>Cap</option><option>Other</option>
+        </select>
+        <select name="size">
+          <option value="">SIZE</option>
+          <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+        </select>
+        <textarea name="idea" rows="4" placeholder="DESCRIBE YOUR DESIGN" required></textarea>
+        <button class="btn" type="submit">SEND REQUEST</button>
+        <p class="mono tiny dim form-msg" id="custom-msg"></p>
+      </form>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="section signup">
+      <h2 class="section-title reveal">Get the Signal</h2>
+      <p class="lead reveal">First access to drops, music and events.</p>
+      <form class="signup-form reveal" id="signup-form">
+        <input type="email" name="email" placeholder="EMAIL" required />
+        <button class="btn" type="submit">JOIN</button>
+      </form>
+      <p class="mono tiny dim form-msg" id="signup-msg"></p>
+    </section>
+  </main>
+
+  <footer class="footer mono tiny">
+    <img src="assets/ds-logo-sm.png" alt="DS" />
+    <div class="footer-links">
+      <a href="https://instagram.com/" target="_blank" rel="noopener">INSTAGRAM</a>
+      <a href="#" target="_blank" rel="noopener">YOUTUBE</a>
+      <a href="#" target="_blank" rel="noopener">SPOTIFY</a>
+      <a href="#custom">CONTACT</a>
+    </div>
+    <p class="dim">© <span id="year"></span> DAWN SOGNI. ALL RIGHTS RESERVED.</p>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head mono"><span>YOUR BAG</span><button id="drawer-close" aria-label="Close">✕</button></div>
+    <ul class="cart-items mono" id="cart-items"></ul>
+    <div class="drawer-foot mono">
+      <div class="total"><span>TOTAL</span><span id="cart-total">₹0</span></div>
+      <button class="btn" id="checkout">CHECKOUT</button>
+      <p class="tiny dim" id="checkout-msg"></p>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- VIDEO MODAL -->
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+
+  <div class="toast mono" id="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
