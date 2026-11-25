@@ -8,23 +8,7 @@
   },
   "featured": "",
   "albums": [],
-  "songs": [
-    {
-      "id": "dont-blend",
-      "title": "Don't Blend",
-      "album": "",
-      "releaseDate": "2026-11-25",
-      "description": "",
-      "lyrics": "",
-      "cover": "media/dont-blend-cover.jpg",
-      "audio": "media/dont-blend.m4a",
-      "video": "media/dont-blend-lyric-video.mp4",
-      "videoLabel": "Lyric video",
-      "youtube": "",
-      "color": "#1a1a1c",
-      "accent": "#e9e4d8"
-    }
-  ],
+  "songs": [],
   "videos": [],
   "events": []
 }
