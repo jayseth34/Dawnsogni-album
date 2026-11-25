@@ -1,22 +1,22 @@
-# Dawn Sogni — Album Site
+# Dawn Sogni — Music Site
 
-Frontend-only album world for **Dawn Sogni** (HTML, CSS, vanilla JS, no build step), hosted on GitHub Pages.
+Frontend-only music site (HTML, CSS, vanilla JS, no build step) on GitHub Pages.
 
 - **Site:** https://jayseth34.github.io/Dawnsogni-album/
 - **Admin:** https://jayseth34.github.io/Dawnsogni-album/admin.html
+- **Shop:** links out to https://jayseth34.github.io/DawnSogniWeb/
 
-## Publishing content (admin panel)
-1. Create a fine-grained GitHub token (https://github.com/settings/personal-access-tokens/new)
-   - Repository access: **Only select repositories → Dawnsogni-album**
-   - Permissions: **Contents: Read and write** (optional: **Pages: Read**)
-2. Open `/admin.html`, paste the token, press **Connect**.
-3. Add album title/description, songs (MP3), videos, products, drops, links → **Publish**.
-   Files go to `media/`, text goes to `content.json`; the live site updates in ~1 minute.
+## Adding music
+1. Create a fine-grained GitHub token (https://github.com/settings/personal-access-tokens/new):
+   only this repository, **Contents: Read and write** (optional **Pages: Read**).
+2. Open `/admin.html`, paste the token, **Connect**.
+3. **Albums** tab: create an album (title, type, date, description, cover).
+4. **Songs** tab: add a song, upload the audio, choose its album (or leave it as a single), add cover, lyrics, lyric video.
+5. **Publish**: files go to `media/`, text to `content.json`; the site updates in about a minute.
 
-The token is stored only in your browser. Files over ~45 MB can't be uploaded from the browser.
+Files over ~45 MB can't be uploaded from the browser — compress videos first.
 
 ## Files
 - `index.html`, `styles.css`, `app.js` — the site (reads `content.json`)
-- `art.js` — generated chrome visuals used when a card has no image/video
 - `admin.html`, `admin.css`, `admin.js` — the admin panel
-- `assets/` — logos and the intro video
+- `assets/` — logo, `media/` — uploaded songs, covers and videos

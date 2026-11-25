@@ -4,113 +4,107 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>DAWN SOGNI — ADMIN</title>
+  <title>Admin — Dawn Sogni</title>
   <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500&family=Cinzel&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
   <header class="bar">
-    <img src="assets/ds-logo-dark.png" alt="Dawn Sogni" class="bar-logo" />
-    <span class="bar-title">ADMIN</span>
+    <img src="assets/ds-logo-dark.png" alt="" class="bar-logo" />
+    <span class="bar-title">Admin</span>
     <div class="bar-actions">
-      <a href="./" target="_blank" class="ghost small">VIEW SITE ↗</a>
-      <button class="btn small" id="publish" disabled>PUBLISH</button>
+      <a href="./" target="_blank" class="ghost">View site ↗</a>
+      <button class="btn" id="publish" disabled>Publish</button>
     </div>
   </header>
 
   <main class="wrap">
-    <!-- Connection -->
     <section class="box" id="connect-box">
-      <h2>CONNECT</h2>
-      <p class="hint">Publishing writes straight to your GitHub repo, and GitHub Pages puts it live in about a minute.
-        Your token stays only in this browser. Use a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
-        with access to <b>only this repository</b> and the permission <b>Contents: Read and write</b> (add <b>Pages: Read</b> so the branch is detected automatically).</p>
+      <h2>Connect</h2>
+      <p class="hint">Publishing writes straight to your GitHub repo; the live site updates about a minute later. Your token stays only in this browser.
+        Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> with access to
+        <b>only this repository</b> and <b>Contents: Read and write</b> (add <b>Pages: Read</b> to detect the live branch automatically).</p>
       <div class="grid4">
-        <label>OWNER<input id="cfg-owner" value="jayseth34" /></label>
-        <label>REPOSITORY<input id="cfg-repo" value="dawnsogni-album" /></label>
-        <label>BRANCH (LIVE SITE)<input id="cfg-branch" value="gh-pages" /></label>
-        <label>TOKEN<input id="cfg-token" type="password" placeholder="github_pat_…" autocomplete="off" /></label>
+        <label>Owner<input id="cfg-owner" value="jayseth34" /></label>
+        <label>Repository<input id="cfg-repo" value="dawnsogni-album" /></label>
+        <label>Branch (live site)<input id="cfg-branch" value="gh-pages" /></label>
+        <label>Token<input id="cfg-token" type="password" placeholder="github_pat_…" autocomplete="off" /></label>
       </div>
       <div class="row">
-        <button class="btn" id="connect">CONNECT</button>
-        <button class="ghost" id="forget">FORGET TOKEN</button>
+        <button class="btn" id="connect">Connect</button>
+        <button class="ghost" id="forget">Forget token</button>
         <span class="status" id="connect-status"></span>
       </div>
     </section>
 
     <div id="editor" hidden>
       <nav class="tabs" id="tabs">
-        <button data-tab="album" class="on">ALBUM &amp; SONGS</button>
-        <button data-tab="videos">VIDEOS</button>
-        <button data-tab="shop">SHOP</button>
-        <button data-tab="drops">DROPS</button>
-        <button data-tab="brand">LINKS &amp; SETTINGS</button>
+        <button data-tab="songs" class="on">Songs</button>
+        <button data-tab="albums">Albums</button>
+        <button data-tab="videos">Videos</button>
+        <button data-tab="events">Events</button>
+        <button data-tab="settings">Settings</button>
       </nav>
 
-      <section class="tab" data-tab="album">
+      <section class="tab" data-tab="songs">
         <div class="box">
-          <h2>ALBUM</h2>
-          <div class="grid2">
-            <label>TITLE<input data-bind="album.title" placeholder="e.g. SOGNI VOL. I" /></label>
-            <label>RELEASE DATE &amp; TIME (OPTIONAL, SHOWS A COUNTDOWN)<input type="datetime-local" data-bind="album.releaseDate" /></label>
-          </div>
-          <label>DESCRIPTION<textarea data-bind="album.description" rows="4" placeholder="Tell the story of the album…"></textarea></label>
-          <div class="upload-row" data-upload="album.cover" data-accept="image/*" data-label="COVER ART (SQUARE IMAGE)"></div>
+          <div class="box-head"><h2>Songs</h2><button class="btn small" data-add="songs">+ Add song</button></div>
+          <p class="hint">Pick an album for each song, or leave it as a single. Songs inside an album play in the order shown here; use ↑ ↓ to reorder.</p>
+          <div class="list" id="list-songs"></div>
         </div>
+      </section>
+
+      <section class="tab" data-tab="albums" hidden>
         <div class="box">
-          <div class="box-head"><h2>SONGS</h2><button class="btn small" data-add="tracks">+ ADD SONG</button></div>
-          <div class="list" id="list-tracks"></div>
+          <div class="box-head"><h2>Albums</h2><button class="btn small" data-add="albums">+ Add album</button></div>
+          <p class="hint">Create the album here, then choose it on each song in the Songs tab.</p>
+          <div class="list" id="list-albums"></div>
         </div>
       </section>
 
       <section class="tab" data-tab="videos" hidden>
         <div class="box">
-          <div class="box-head"><h2>VIDEOS</h2><button class="btn small" data-add="videos">+ ADD VIDEO</button></div>
-          <p class="hint">Paste a YouTube link, or upload an MP4 (keep it under ~40 MB). Each video becomes a card in the carousel.</p>
+          <div class="box-head"><h2>Other videos</h2><button class="btn small" data-add="videos">+ Add video</button></div>
+          <p class="hint">A song's own lyric or music video goes on the song itself. Use this for anything else (films, behind the scenes…).</p>
           <div class="list" id="list-videos"></div>
         </div>
       </section>
 
-      <section class="tab" data-tab="shop" hidden>
+      <section class="tab" data-tab="events" hidden>
         <div class="box">
-          <div class="box-head"><h2>PRODUCTS</h2><button class="btn small" data-add="products">+ ADD PRODUCT</button></div>
-          <div class="list" id="list-products"></div>
+          <div class="box-head"><h2>Events</h2><button class="btn small" data-add="events">+ Add event</button></div>
+          <div class="list" id="list-events"></div>
         </div>
       </section>
 
-      <section class="tab" data-tab="drops" hidden>
+      <section class="tab" data-tab="settings" hidden>
         <div class="box">
-          <div class="box-head"><h2>DROPS &amp; EVENTS</h2><button class="btn small" data-add="drops">+ ADD EVENT</button></div>
-          <div class="list" id="list-drops"></div>
+          <h2>Homepage</h2>
+          <label>Featured release (top of the homepage)<select id="featured"></select></label>
         </div>
-      </section>
-
-      <section class="tab" data-tab="brand" hidden>
         <div class="box">
-          <h2>LINKS &amp; CONTACT</h2>
+          <h2>Links</h2>
           <div class="grid2">
-            <label>ORDER EMAIL (CHECKOUT &amp; CUSTOM ORDERS)<input type="email" data-bind="brand.email" /></label>
-            <label>INSTAGRAM URL<input data-bind="brand.instagram" placeholder="https://instagram.com/…" /></label>
-            <label>SPOTIFY URL<input data-bind="brand.spotify" /></label>
-            <label>APPLE MUSIC URL<input data-bind="brand.appleMusic" /></label>
-            <label>YOUTUBE CHANNEL URL<input data-bind="brand.youtube" /></label>
-            <label>CURRENCY SYMBOL<input data-bind="currency" maxlength="3" /></label>
+            <label>Shop URL<input data-bind="brand.shopUrl" /></label>
+            <label>Instagram URL<input data-bind="brand.instagram" /></label>
+            <label>Spotify URL<input data-bind="brand.spotify" /></label>
+            <label>Apple Music URL<input data-bind="brand.appleMusic" /></label>
+            <label>YouTube URL<input data-bind="brand.youtube" /></label>
           </div>
-          <label class="check"><input type="checkbox" data-bind="customOrders" /> SHOW "MADE TO ORDER" CARD</label>
         </div>
         <div class="box">
-          <h2>CLEAN UP</h2>
-          <p class="hint">Removes uploaded files in <code>media/</code> that nothing on the site uses anymore. Publish your changes first.</p>
-          <button class="ghost" id="cleanup">DELETE UNUSED FILES</button>
+          <h2>Clean up</h2>
+          <p class="hint">Deletes uploaded files in <code>media/</code> that nothing on the site uses anymore. Publish first.</p>
+          <div><button class="ghost" id="cleanup">Delete unused files</button></div>
         </div>
       </section>
     </div>
 
     <section class="box log" id="log-box" hidden>
-      <h2>PUBLISHING</h2>
+      <h2>Publishing</h2>
       <ol id="log"></ol>
     </section>
   </main>

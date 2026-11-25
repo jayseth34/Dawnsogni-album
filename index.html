@@ -3,74 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>DAWN SOGNI — EXPLORE</title>
-  <meta name="description" content="Explore the Dawn Sogni world — music, visuals, drops, shop." />
+  <title>Dawn Sogni</title>
+  <meta name="description" content="Music, videos and releases." />
   <meta name="theme-color" content="#000000" />
   <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500&family=Cinzel:wght@400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Blurred background of the active card -->
-  <div class="bg" aria-hidden="true">
-    <canvas id="bg-canvas"></canvas>
-    <video id="bg-video" muted loop playsinline></video>
-    <img id="bg-img" alt="" />
-  </div>
-  <div class="bg-shade" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
+  <div class="tint" aria-hidden="true"></div>
 
-  <!-- Gate -->
-  <div class="gate" id="gate">
-    <video class="gate-video" id="gate-video" src="assets/ds-intro.mp4" poster="assets/ds-intro-poster.jpg" muted autoplay loop playsinline></video>
-    <button class="gate-enter" id="enter">ENTER</button>
-  </div>
-
-  <!-- Top bar -->
-  <header class="top">
-    <button class="top-left" id="back"><span id="back-label"></span></button>
-    <button class="top-logo" id="home" aria-label="Dawn Sogni home"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></button>
-    <button class="pill" id="shop-pill">SHOP<span id="bag-count"></span></button>
+  <header class="hdr" id="hdr">
+    <nav class="hdr-nav">
+      <a href="#music">Music</a>
+      <a href="#videos" data-sec="videos" hidden>Videos</a>
+      <a href="#events" data-sec="events" hidden>Events</a>
+    </nav>
+    <a href="#top" class="hdr-logo" aria-label="Home"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></a>
+    <a class="hdr-shop" id="shop-link" href="https://jayseth34.github.io/DawnSogniWeb/" target="_blank" rel="noopener">Shop <span aria-hidden="true">↗</span></a>
   </header>
 
-  <!-- World / carousel -->
-  <main class="world" id="world">
-    <div class="heading">
-      <p class="eyebrow">EXPLORE</p>
-      <h1>DAWN SOGNI WORLD</h1>
-    </div>
-    <div class="track" id="track"></div>
-    <p class="label" id="label">&nbsp;</p>
-    <button class="emblem" id="emblem" aria-label="Open">
-      <svg viewBox="0 0 200 200" class="emblem-ring" aria-hidden="true">
-        <defs><path id="circ" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0" /></defs>
-        <text><textPath href="#circ" textLength="500">DAWN SOGNI · SOGNI VOL. I · DAWN SOGNI · SOGNI VOL. I ·</textPath></text>
-      </svg>
-      <img src="assets/ds-logo-dark.png" alt="" class="emblem-logo" />
-    </button>
+  <main id="top">
+    <section class="hero" id="hero"></section>
+
+    <section class="sec" id="music">
+      <div class="sec-head">
+        <h2>Music</h2>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="grid" id="releases"></div>
+    </section>
+
+    <section class="sec" id="videos" hidden>
+      <div class="sec-head"><h2>Videos</h2></div>
+      <div class="vgrid" id="video-grid"></div>
+    </section>
+
+    <section class="sec" id="events" hidden>
+      <div class="sec-head"><h2>Events</h2></div>
+      <ul class="events" id="event-list"></ul>
+    </section>
+
+    <footer class="foot" id="foot"></footer>
   </main>
 
-  <!-- Panel (opens over the world) -->
-  <section class="panel" id="panel" aria-hidden="true">
-    <div class="panel-inner" id="panel-inner"></div>
-  </section>
+  <!-- Release sheet -->
+  <div class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-bg" id="sheet-bg"></div>
+    <button class="x-btn" id="sheet-close" aria-label="Close">✕</button>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
 
-  <!-- Bag drawer -->
-  <aside class="drawer" id="drawer" aria-hidden="true">
-    <div class="drawer-head"><span>BAG</span><button id="drawer-close" aria-label="Close">✕</button></div>
-    <ul class="cart-items" id="cart-items"></ul>
-    <div class="drawer-foot">
-      <div class="total"><span>TOTAL</span><span id="cart-total">₹0</span></div>
-      <button class="btn" id="checkout">CHECKOUT</button>
-      <p class="note" id="checkout-msg"></p>
+  <!-- Video modal -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <button class="x-btn" id="modal-close" aria-label="Close">✕</button>
+    <div class="modal-frame" id="modal-frame"></div>
+  </div>
+
+  <!-- Player bar -->
+  <div class="player" id="player" hidden>
+    <div class="pl-progress" id="pl-progress"><div id="pl-fill"></div></div>
+    <img class="pl-cover" id="pl-cover" alt="" />
+    <div class="pl-meta"><div class="pl-title" id="pl-title"></div><div class="pl-sub" id="pl-sub"></div></div>
+    <div class="pl-ctrl">
+      <button id="pl-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 18V6z"/></svg></button>
+      <button id="pl-play" class="pl-play" aria-label="Play"><svg viewBox="0 0 24 24"><path id="pl-icon" d="M8 5v14l11-7z"/></svg></button>
+      <button id="pl-next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
     </div>
-  </aside>
-  <div class="overlay" id="overlay"></div>
-  <div class="toast" id="toast"></div>
+    <div class="pl-time" id="pl-time">0:00 / 0:00</div>
+    <div class="pl-extra">
+      <button id="pl-lyrics" class="txt-btn" hidden>Lyrics</button>
+      <button id="pl-video" class="txt-btn" hidden>Video</button>
+    </div>
+  </div>
 
-  <script src="art.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
