@@ -4,7 +4,9 @@
 (() => {
   const FONT_FACES = [
     ["DS Anton", "assets/fonts/anton.woff2"],
-    ["DS Script", "assets/fonts/pinyon-script.woff2"]
+    ["DS Script", "assets/fonts/pinyon-script.woff2"],
+    ["DS Gothic", "assets/fonts/gothic.woff2"],
+    ["DS Serif", "assets/fonts/cormorant-700.woff2"]
   ];
   let fontsReady = null;
   function loadFonts() {
@@ -67,7 +69,7 @@
     const g = c.getContext("2d"), a = accent || [230, 210, 122];
     const body = g.createLinearGradient(0, 0, W, 0);
     body.addColorStop(0, "#0b0b0b"); body.addColorStop(0.7, "#1a1714"); body.addColorStop(1, "#2a241d");
-    g.fillStyle = body; g.strokeStyle = rgba(a, 0.55); g.lineWidth = 3; g.lineJoin = "round";
+    g.fillStyle = body; g.strokeStyle = rgba(a, 0.28); g.lineWidth = 2.5; g.lineJoin = "round";
     const P = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill(); };
     // side-profile chair facing left; far legs are darker for depth
     const far = "#060606";
@@ -196,6 +198,46 @@
       }
       if (o.line) { ctx.save(); ctx.font = `${W * 0.026}px "DS Anton"`; ctx.fillStyle = "rgba(255,255,255,0.75)"; ctx.textAlign = "center"; ctx.fillText(o.line.toUpperCase().split("").join(" "), W / 2, H * 0.09); ctx.restore(); }
       vignette(ctx, W, H, 0.55); grain(ctx, W, H, 0.2, rnd);
+    },
+
+    gothic(ctx, W, H, o, rnd) {
+      const c = hex(o.color || "#141414"), a = hex(o.accent || "#e9e4d8");
+      const floorY = H * 0.76;
+      ctx.fillStyle = "#030303"; ctx.fillRect(0, 0, W, H);
+      // faint coloured breath in the dark
+      let g = ctx.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, W * 0.7);
+      g.addColorStop(0, rgba(c, 0.55)); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      fog(ctx, W, H, rnd, [120, 120, 125], 26, 0.1, 0.9, 0.1);
+      // giant blackletter title
+      const t = (o.title || "").trim();
+      if (t) {
+        const size = fitFont(ctx, t, "DS Gothic", W * 0.9, H * 0.34);
+        ctx.save(); ctx.font = `${size}px "DS Gothic"`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+        g = ctx.createLinearGradient(0, H * 0.25, 0, H * 0.25 + size);
+        g.addColorStop(0, rgba(a, 0.95)); g.addColorStop(0.6, rgba(a, 0.55)); g.addColorStop(1, rgba(a, 0.15));
+        ctx.fillStyle = g; ctx.shadowColor = rgba(a, 0.25); ctx.shadowBlur = W * 0.02;
+        ctx.fillText(t, W / 2, H * 0.24 + size * 0.75); ctx.restore();
+      }
+      // cold spotlight straight down
+      beam(ctx, W / 2, -H * 0.08, Math.PI / 2, H * 0.95, W * 0.42, [230, 232, 240], 0.5);
+      // floor
+      g = ctx.createLinearGradient(0, floorY, 0, H); g.addColorStop(0, "#0b0b0c"); g.addColorStop(1, "#020202");
+      ctx.fillStyle = g; ctx.fillRect(0, floorY, W, H - floorY);
+      ctx.save(); ctx.globalCompositeOperation = "screen";
+      g = ctx.createRadialGradient(W / 2, floorY + H * 0.03, 0, W / 2, floorY + H * 0.03, W * 0.32);
+      g.addColorStop(0, "rgba(220,222,230,0.22)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.translate(0, floorY); ctx.scale(1, 0.28); ctx.translate(0, -floorY); ctx.fillStyle = g; ctx.fillRect(0, floorY - H, W, H * 2); ctx.restore();
+      subject(ctx, o.subject, W * 0.5, floorY + H * 0.04, W * (o.subjectIsLogo ? 0.6 : 0.42), H * (o.subjectIsLogo ? 0.4 : 0.4), { reflect: 0.22, shadow: 0.8 });
+      fog(ctx, W, H, rnd, [150, 150, 155], 16, 0.65, 1, 0.09);
+      // thin double frame + small line
+      ctx.save(); ctx.strokeStyle = rgba(a, 0.4); ctx.lineWidth = Math.max(1, W * 0.0015);
+      ctx.strokeRect(W * 0.04, W * 0.04, W * 0.92, H - W * 0.08);
+      ctx.strokeRect(W * 0.052, W * 0.052, W * 0.896, H - W * 0.104); ctx.restore();
+      if (o.line) {
+        ctx.save(); ctx.font = `${W * 0.024}px "DS Serif"`; ctx.fillStyle = rgba(a, 0.8); ctx.textAlign = "center";
+        ctx.fillText("\u2020   " + o.line.toUpperCase().split("").join(" ") + "   \u2020", W / 2, H * 0.92); ctx.restore();
+      }
+      vignette(ctx, W, H, 0.85); grain(ctx, W, H, 0.18, rnd);
     },
 
     studio(ctx, W, H, o, rnd) {

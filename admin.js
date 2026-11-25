@@ -270,9 +270,9 @@
     log("Clean-up finished.", "done");
   };
   /* ---------- Cover maker ---------- */
-  const PRESETS = { spotlight: ["#1f5a3c", "#e6d27a"], glow: ["#1d3b2a", "#d4552b"], studio: ["#b0121b", "#e08ad8"] };
+  const PRESETS = { gothic: ["#1a1a1c", "#e9e4d8"], spotlight: ["#1f5a3c", "#e6d27a"], glow: ["#1d3b2a", "#d4552b"], studio: ["#b0121b", "#e08ad8"] };
   const logoImg = new Image(); logoImg.src = "assets/ds-mark.png";
-  const cm = { path: "", style: "spotlight", subject: "chair", seed: 7 };
+  const cm = { path: "", style: "gothic", subject: "chair", seed: 7 };
   const cmCanvas = $("#cm-canvas");
   async function drawMaker(canvas = cmCanvas) {
     if (!logoImg.complete) await logoImg.decode().catch(() => {});

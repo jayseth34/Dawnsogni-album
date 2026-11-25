@@ -135,7 +135,7 @@
       return `<div class="wash"></div>
         <div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div>
         ${f ? `<section class="banner">
-          <div class="giant" aria-hidden="true">${esc(f.title.toUpperCase())}</div>
+          <div class="giant" aria-hidden="true">${esc(f.title)}</div>
           ${f.cover ? `<img class="banner-art" src="${esc(f.cover)}" alt="" data-go="#/r/${f.key}" />` : `<div class="banner-art" data-go="#/r/${f.key}">${art("", f.title)}</div>`}
           <div class="banner-info">
             <p class="kicker">${f === releases[0] ? "Latest " : ""}${esc(f.type)}</p>
@@ -167,7 +167,7 @@
       const more = releases.filter((x) => x !== r);
       return `<div class="wash"></div>
         <section class="rhead">
-          <div class="giant" aria-hidden="true">${esc(r.title.toUpperCase())}</div>
+          <div class="giant" aria-hidden="true">${esc(r.title)}</div>
           ${r.cover ? `<img class="rhead-art" src="${esc(r.cover)}" alt="" />` : `<div class="rhead-art">${art("", r.title)}</div>`}
           <div class="rhead-info">
             <div class="rhead-type">${esc(r.type)}</div>
