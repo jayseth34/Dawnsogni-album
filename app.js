@@ -23,7 +23,7 @@
       w = canvas.width = innerWidth * dpr; h = canvas.height = innerHeight * dpr;
       parts = Array.from({ length: count }, () => ({
         x: Math.random() * w, y: Math.random() * h, r: (0.15 + Math.random() * 0.35) * Math.max(w, h),
-        vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.15, a: 0.03 + Math.random() * 0.05, c: Math.random() < 0.6 ? "255,140,50" : "255,220,180"
+        vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.15, a: 0.03 + Math.random() * 0.05, c: Math.random() < 0.5 ? "200,202,212" : "255,255,255"
       }));
     };
     resize(); addEventListener("resize", resize);
@@ -242,7 +242,7 @@
     if (analyser && playing) analyser.getByteFrequencyData(data); else data.fill(0);
     const bars = 64, bw = W / bars;
     const grad = vctx.createLinearGradient(0, 0, W, 0);
-    grad.addColorStop(0, "#b8541a"); grad.addColorStop(0.5, "#fff1de"); grad.addColorStop(1, "#c2611f");
+    grad.addColorStop(0, "#55555c"); grad.addColorStop(0.5, "#ffffff"); grad.addColorStop(1, "#55555c");
     vctx.fillStyle = grad;
     for (let i = 0; i < bars; i++) {
       const v = data[i] / 255; const bh = Math.max(2 * dpr, v * H);
