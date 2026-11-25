@@ -35,9 +35,10 @@
   /* ---------- State ---------- */
   let data = EMPTY(), dirty = false, siteUrl = "./";
   const pending = new Map(), previews = new Map();
+  const busy = new Map(); // upload path -> processing status
   const get = (path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), data);
   const set = (path, val) => { const ks = path.split("."), last = ks.pop(); const o = ks.reduce((o, k) => (o[k] ??= {}), data); o[last] = val; markDirty(); };
-  const markDirty = () => { dirty = true; $("#publish").disabled = false; };
+  const markDirty = () => { dirty = true; $("#publish").disabled = busy.size > 0; };
   addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   /* ---------- Connect ---------- */
@@ -87,7 +88,7 @@
       head: (s) => `${esc(s.title || "Untitled song")}<small>${esc(s.album ? data.albums.find((a) => a.id === s.album)?.title || "Single" : "Single")}</small>`,
       fields: [
         { row: [{ k: "title", label: "Title" }, { k: "album", label: "Album", type: "select", options: albumOptions }, { k: "releaseDate", label: "Release date", type: "date" }] },
-        { k: "audio", label: "Audio (MP3 / M4A)", type: "upload", accept: "audio/*" },
+        { k: "audio", label: "Audio — MP3, M4A, WAV… or drop a video and its audio is extracted automatically", type: "upload", accept: "audio/*,video/*" },
         { k: "cover", label: "Cover art (square). Songs in an album use the album cover if left empty.", type: "upload", accept: "image/*" },
         { row: [{ k: "color", label: "Theme colour (site colour for this release)", type: "color" }, { k: "accent", label: "Light colour", type: "color" }] },
         { k: "description", label: "Description (optional)", type: "textarea", rows: 2 },
@@ -185,18 +186,64 @@
         ${/\.cover$/.test(p) ? `<button class="ghost small" data-design>✦ Design cover</button>` : ""}
         ${v ? `<button class="ghost small danger" data-clear>Remove</button>` : ""}
         <span class="file-name ${isPending ? "pending" : ""}">${esc(name)}</span></div>`;
-    $("input[type=file]", row).onchange = (e) => {
-      const f = e.target.files[0]; if (!f) return;
-      if (f.size > 45 * 1024 * 1024) return alert("That file is over 45 MB — GitHub won't accept it from the browser. Please compress it first.");
-      const nid = Math.random().toString(36).slice(2, 10);
-      pending.set(nid, f); previews.set(nid, URL.createObjectURL(f));
-      set(p, "pending:" + nid);
-      const m = p.match(/^songs\.(\d+)\.audio$/);
-      if (m && !data.songs[+m[1]].title) { data.songs[+m[1]].title = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "); renderList("songs"); }
-      else renderUpload(row);
-    };
+    $("input[type=file]", row).onchange = (e) => { const f = e.target.files[0]; if (f) handleFile(p, f); };
+    if (busy.has(p)) { const fn = $(".file-name", row); fn.textContent = busy.get(p); fn.className = "file-name pending"; $(".pick", row).style.display = "none"; }
     const clr = $("[data-clear]", row); if (clr) clr.onclick = () => { set(p, ""); renderUpload(row); };
     const des = $("[data-design]", row); if (des) des.onclick = () => openMaker(p);
+  }
+
+  /* ---------- Automatic media processing (compress / extract audio) ---------- */
+  const MAXB = 45 * 1024 * 1024;
+  function setBusy(path, text) {
+    if (text == null) busy.delete(path); else busy.set(path, text);
+    $$(`.upload-row[data-upload="${path}"]`).forEach(renderUpload);
+    const b = $("#publish"); b.disabled = busy.size > 0 || !dirty; b.textContent = busy.size ? "Processing…" : "Publish";
+  }
+  function addPending(path, file) {
+    const nid = Math.random().toString(36).slice(2, 10);
+    pending.set(nid, file); previews.set(nid, URL.createObjectURL(file));
+    set(path, "pending:" + nid);
+  }
+  const prog = (path) => (p, label) => setBusy(path, `${label || "Working"}… ${Math.round(p * 100)}%`);
+  const size = (f) => (f.size / 1048576).toFixed(1) + " MB";
+  async function handleFile(path, f) {
+    const m = path.match(/^songs\.(\d+)\.(audio|video)$/), song = m && data.songs[+m[1]];
+    try {
+      if (/\.(cover|poster|image)$/.test(path)) {
+        setBusy(path, "Optimising image…");
+        addPending(path, await DSMedia.image(f));
+      } else if (DSMedia.isVideo(f)) {
+        if (song && m[2] === "audio") {
+          // video dropped on the audio slot: take its audio, and keep the video as the song's video if it has none
+          setBusy(path, "Extracting audio…");
+          addPending(path, await DSMedia.extractAudio(f, prog(path)));
+          setBusy(path, null);
+          if (!song.video) { const vp = `songs.${m[1]}.video`; setBusy(vp, "Compressing video…"); const v = await DSMedia.video(f, prog(vp)); if (v.size <= MAXB) addPending(vp, v); setBusy(vp, null); }
+        } else {
+          setBusy(path, "Compressing video…");
+          const v = await DSMedia.video(f, prog(path));
+          if (v.size > MAXB) throw new Error(`Even compressed, the video is ${size(v)} — GitHub accepts up to 45 MB. Try a shorter clip.`);
+          addPending(path, v);
+          setBusy(path, null);
+          if (song && !song.audio) { const ap = `songs.${m[1]}.audio`; setBusy(ap, "Extracting audio…"); addPending(ap, await DSMedia.extractAudio(f, prog(ap))); setBusy(ap, null); }
+        }
+      } else if (DSMedia.isAudio(f)) {
+        setBusy(path, "Optimising audio…");
+        const a = await DSMedia.audio(f, prog(path));
+        if (a.size > MAXB) throw new Error(`The audio is ${size(a)} even after compressing — GitHub accepts up to 45 MB.`);
+        addPending(path, a);
+      } else {
+        if (f.size > MAXB) throw new Error("That file is over 45 MB — GitHub won't accept it from the browser.");
+        addPending(path, f);
+      }
+      if (song && !song.title) { song.title = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "); }
+    } catch (err) {
+      alert(err.message || String(err));
+    } finally {
+      [...busy.keys()].filter((k) => k.startsWith(path.replace(/\.[^.]+$/, ""))).forEach((k) => busy.delete(k));
+      setBusy(path, null);
+      if (m) renderList("songs"); else render();
+    }
   }
 
   function renderFeatured() {
