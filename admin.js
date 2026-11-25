@@ -83,12 +83,13 @@
   const LISTS = {
     songs: {
       name: "song",
-      blank: () => ({ id: uid("song"), title: "", album: "", releaseDate: new Date().toISOString().slice(0, 10), description: "", lyrics: "", cover: "", audio: "", video: "", videoLabel: "Lyric video", youtube: "" }),
+      blank: () => ({ id: uid("song"), title: "", album: "", releaseDate: new Date().toISOString().slice(0, 10), description: "", lyrics: "", cover: "", audio: "", video: "", videoLabel: "Lyric video", youtube: "", color: "", accent: "" }),
       head: (s) => `${esc(s.title || "Untitled song")}<small>${esc(s.album ? data.albums.find((a) => a.id === s.album)?.title || "Single" : "Single")}</small>`,
       fields: [
         { row: [{ k: "title", label: "Title" }, { k: "album", label: "Album", type: "select", options: albumOptions }, { k: "releaseDate", label: "Release date", type: "date" }] },
         { k: "audio", label: "Audio (MP3 / M4A)", type: "upload", accept: "audio/*" },
         { k: "cover", label: "Cover art (square). Songs in an album use the album cover if left empty.", type: "upload", accept: "image/*" },
+        { row: [{ k: "color", label: "Theme colour (site colour for this release)", type: "color" }, { k: "accent", label: "Light colour", type: "color" }] },
         { k: "description", label: "Description (optional)", type: "textarea", rows: 2 },
         { k: "lyrics", label: "Lyrics (optional)", type: "textarea", rows: 6 },
         { k: "video", label: "Lyric / music video (MP4, optional)", type: "upload", accept: "video/*" },
@@ -97,12 +98,13 @@
     },
     albums: {
       name: "album",
-      blank: () => ({ id: uid("album"), title: "", type: "Album", releaseDate: "", description: "", cover: "" }),
+      blank: () => ({ id: uid("album"), title: "", type: "Album", releaseDate: "", description: "", cover: "", color: "", accent: "" }),
       head: (a) => `${esc(a.title || "Untitled album")}<small>${esc(a.type || "Album")} · ${data.songs.filter((s) => s.album === a.id).length} songs</small>`,
       fields: [
         { row: [{ k: "title", label: "Title" }, { k: "type", label: "Type", type: "select", options: () => ["Album", "EP", "Mixtape", "Deluxe"].map((x) => [x, x]) }, { k: "releaseDate", label: "Release date", type: "date" }] },
         { k: "description", label: "Description", type: "textarea", rows: 3 },
-        { k: "cover", label: "Album cover (square)", type: "upload", accept: "image/*" }
+        { k: "cover", label: "Album cover (square)", type: "upload", accept: "image/*" },
+        { row: [{ k: "color", label: "Theme colour (site colour for this release)", type: "color" }, { k: "accent", label: "Light colour", type: "color" }] }
       ]
     },
     videos: {
@@ -164,6 +166,7 @@
   function bindInputs(root, onChange) {
     $$("[data-bind]", root).forEach((el) => {
       const p = el.dataset.bind; el.value = get(p) ?? "";
+      if (el.type === "color" && !get(p)) el.value = "#202022";
       el.oninput = () => set(p, el.value);
       el.onchange = () => { set(p, el.value); onChange && onChange(); };
     });
@@ -180,6 +183,7 @@
     row.innerHTML = `<label>${row.dataset.label}</label>
       <div class="upload">${preview}
         <span class="ghost small pick">${v ? "Replace" : "Choose file"}<input type="file" accept="${accept}" /></span>
+        ${/\.cover$/.test(p) ? `<button class="ghost small" data-design>✦ Design cover</button>` : ""}
         ${v ? `<button class="ghost small danger" data-clear>Remove</button>` : ""}
         <span class="file-name ${isPending ? "pending" : ""}">${esc(name)}</span></div>`;
     $("input[type=file]", row).onchange = (e) => {
@@ -193,6 +197,7 @@
       else renderUpload(row);
     };
     const clr = $("[data-clear]", row); if (clr) clr.onclick = () => { set(p, ""); renderUpload(row); };
+    const des = $("[data-design]", row); if (des) des.onclick = () => openMaker(p);
   }
 
   function renderFeatured() {
@@ -263,5 +268,53 @@
       catch (e) { li.className = "err"; li.textContent = `Couldn't delete ${f.name}: ${e.message}`; }
     }
     log("Clean-up finished.", "done");
+  };
+  /* ---------- Cover maker ---------- */
+  const PRESETS = { spotlight: ["#1f5a3c", "#e6d27a"], glow: ["#1d3b2a", "#d4552b"], studio: ["#b0121b", "#e08ad8"] };
+  const logoImg = new Image(); logoImg.src = "assets/ds-mark.png";
+  const cm = { path: "", style: "spotlight", subject: null, isLogo: true, seed: 7 };
+  const cmCanvas = $("#cm-canvas");
+  async function drawMaker(canvas = cmCanvas) {
+    if (!logoImg.complete) await logoImg.decode().catch(() => {});
+    await DSCover.render(canvas, {
+      style: cm.style, title: $("#cm-title").value, line: $("#cm-line").value,
+      color: $("#cm-color").value, accent: $("#cm-accent").value,
+      subject: cm.subject || logoImg, subjectIsLogo: !cm.subject, seed: cm.seed
+    });
+  }
+  function openMaker(path) {
+    cm.path = path;
+    const base = path.replace(/\.cover$/, ""), item = get(base) || {};
+    $("#cm-title").value = item.title || "";
+    $("#cm-line").value = path.startsWith("albums.") ? (item.type || "Album") : "";
+    if (item.color) $("#cm-color").value = item.color;
+    if (item.accent) $("#cm-accent").value = item.accent;
+    $("#cm").hidden = false; drawMaker();
+  }
+  $("#cm-close").onclick = () => ($("#cm").hidden = true);
+  $("#cm-styles").onclick = (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    cm.style = b.dataset.style; $$("#cm-styles button").forEach((x) => x.classList.toggle("on", x === b));
+    [$("#cm-color").value, $("#cm-accent").value] = PRESETS[cm.style]; drawMaker();
+  };
+  ["cm-title", "cm-line", "cm-color", "cm-accent"].forEach((id) => ($("#" + id).oninput = () => drawMaker()));
+  $("#cm-seed").onclick = () => { cm.seed = (Math.random() * 1e9) | 0; drawMaker(); };
+  $("#cm-logo").onclick = () => { cm.subject = null; drawMaker(); };
+  $("#cm-subject").onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const img = new Image(); img.onload = () => { cm.subject = img; drawMaker(); }; img.src = URL.createObjectURL(f);
+  };
+  $("#cm-use").onclick = async () => {
+    const big = document.createElement("canvas"); big.width = big.height = 1500;
+    await drawMaker(big);
+    const blob = await new Promise((ok) => big.toBlob(ok, "image/jpeg", 0.9));
+    const name = slug($("#cm-title").value || "cover") + "-cover.jpg";
+    const file = new File([blob], name, { type: "image/jpeg" });
+    const nid = Math.random().toString(36).slice(2, 10);
+    pending.set(nid, file); previews.set(nid, URL.createObjectURL(file));
+    set(cm.path, "pending:" + nid);
+    const base = cm.path.replace(/\.cover$/, "");
+    set(base + ".color", $("#cm-color").value); set(base + ".accent", $("#cm-accent").value);
+    $("#cm").hidden = true; render();
   };
 })();

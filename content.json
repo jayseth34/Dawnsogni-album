@@ -20,7 +20,9 @@
       "audio": "media/dont-blend.m4a",
       "video": "media/dont-blend-lyric-video.mp4",
       "videoLabel": "Lyric video",
-      "youtube": ""
+      "youtube": "",
+      "color": "#1f5a3c",
+      "accent": "#e6d27a"
     }
   ],
   "videos": [],

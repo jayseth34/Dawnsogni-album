@@ -109,6 +109,36 @@
     </section>
   </main>
 
+  <!-- Cover maker -->
+  <div class="cm" id="cm" hidden>
+    <div class="cm-card">
+      <div class="cm-preview"><canvas id="cm-canvas" width="900" height="900"></canvas></div>
+      <div class="cm-side">
+        <div class="box-head"><h2>Design a cover</h2><button class="ghost small" id="cm-close">Close</button></div>
+        <div class="cm-styles" id="cm-styles">
+          <button data-style="spotlight" class="on">Spotlight</button>
+          <button data-style="glow">Glow</button>
+          <button data-style="studio">Studio</button>
+        </div>
+        <label>Title<input id="cm-title" /></label>
+        <label>Small line (optional)<input id="cm-line" placeholder="e.g. Single, Vol. I" /></label>
+        <div class="grid2">
+          <label>Colour<input type="color" id="cm-color" value="#1f5a3c" /></label>
+          <label>Light colour<input type="color" id="cm-accent" value="#e6d27a" /></label>
+        </div>
+        <label>Subject</label>
+        <div class="upload">
+          <span class="ghost small pick">Upload photo / PNG<input type="file" id="cm-subject" accept="image/*" /></span>
+          <button class="ghost small" id="cm-logo">Use DS logo</button>
+          <button class="ghost small" id="cm-seed">Shuffle fog</button>
+        </div>
+        <p class="hint">Tip: a photo with a transparent background (PNG cut-out of you, a mic, shoes…) looks best — like a real poster.</p>
+        <button class="btn" id="cm-use">Use this cover</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cover.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

@@ -26,12 +26,12 @@
       return {
         key: "a:" + a.id, type: a.type || "Album", title: a.title || "Untitled", description: a.description || "",
         cover: a.cover || tracks.find((t) => t.cover)?.cover || "", date: a.releaseDate || tracks.map((t) => t.releaseDate).filter(Boolean).sort().pop() || "",
-        tracks, album: a
+        tracks, album: a, color: a.color, accent: a.accent
       };
     }),
     ...songs.filter((s) => !s.album || !albumById[s.album]).map((s) => ({
       key: "s:" + s.id, type: "Single", title: s.title || "Untitled", description: s.description || "",
-      cover: s.cover || "", date: s.releaseDate || "", tracks: [s], single: true
+      cover: s.cover || "", date: s.releaseDate || "", tracks: [s], single: true, color: s.color, accent: s.accent
     }))
   ];
   const byDate = [...releases].sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -51,21 +51,40 @@
   function updateTotals() { $$("[data-total]").forEach((el) => { const r = releases.find((x) => x.key === el.dataset.total); const s = r && releaseLength(r); if (s) el.textContent = r.single ? fmt(s) : `${Math.round(s / 60)} min`; }); }
   songs.forEach(loadDuration);
 
-  /* ---------- Ambient tint from artwork ---------- */
-  function tintFrom(src) {
-    if (!src) return;
-    const img = new Image(); img.crossOrigin = "anonymous"; img.src = src;
+  /* ---------- Colour grade (per release) ---------- */
+  const hexRgb = (h) => { h = String(h || "").replace("#", ""); if (h.length === 3) h = h.split("").map((c) => c + c).join(""); if (!/^[0-9a-f]{6}$/i.test(h)) return null; const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const themeCache = {};
+  function applyTheme(target, r) {
+    if (!r) return;
+    const set = (c, a) => { target.style.setProperty("--c", c.join(", ")); target.style.setProperty("--a", a.join(", ")); };
+    const c = hexRgb(r.color), a = hexRgb(r.accent);
+    if (c) return set(c, a || c.map((v) => Math.min(255, v + 110)));
+    if (themeCache[r.cover]) return set(...themeCache[r.cover]);
+    if (!r.cover) return;
+    const img = new Image(); img.src = r.cover;
     img.onload = () => {
       try {
-        const c = document.createElement("canvas"); c.width = c.height = 24;
-        const g = c.getContext("2d"); g.drawImage(img, 0, 0, 24, 24);
-        const d = g.getImageData(0, 0, 24, 24).data; let r = 0, gr = 0, b = 0, n = 0;
-        for (let i = 0; i < d.length; i += 4) { const w = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) + 20; r += d[i] * w; gr += d[i + 1] * w; b += d[i + 2] * w; n += w; }
-        r /= n; gr /= n; b /= n; const k = 150 / Math.max(r, gr, b, 1);
-        document.documentElement.style.setProperty("--tint", `${Math.round(r * k)}, ${Math.round(gr * k)}, ${Math.round(b * k)}`);
+        const cv = document.createElement("canvas"); cv.width = cv.height = 24;
+        const g = cv.getContext("2d"); g.drawImage(img, 0, 0, 24, 24);
+        const d = g.getImageData(0, 0, 24, 24).data; let R = 0, G = 0, B = 0, n = 0;
+        for (let i = 0; i < d.length; i += 4) { const w = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) + 10; R += d[i] * w; G += d[i + 1] * w; B += d[i + 2] * w; n += w; }
+        const base = [R / n, G / n, B / n], k = 120 / Math.max(...base, 1);
+        const col = base.map((v) => Math.round(v * k)), acc = col.map((v) => Math.min(255, Math.round(v * 1.6 + 60)));
+        themeCache[r.cover] = [col, acc]; set(col, acc);
       } catch {}
     };
   }
+
+  /* giant poster type: scale a word to fill its container's width */
+  function fitGiant(root = document) {
+    $$(".giant", root).forEach((el) => {
+      el.style.fontSize = "100px";
+      const w = el.scrollWidth || 1, box = el.parentElement.clientWidth * 0.96;
+      el.style.fontSize = Math.min((100 * box) / w, el.parentElement.clientHeight * 0.62) + "px";
+    });
+  }
+  addEventListener("resize", () => fitGiant());
+  const spaced = (t) => esc(t);
 
   /* ---------- Hero ---------- */
   const featured = releases.find((r) => r.key === C.featured) || byDate[0];
@@ -74,10 +93,12 @@
     const hasVideo = featured.single && (featured.tracks[0].video || featured.tracks[0].youtube);
     const playable = featured.tracks.some((t) => t.audio);
     hero.innerHTML = `
-      <div class="hero-art reveal" data-open="${featured.key}">${artHTML(featured.cover, featured.title)}</div>
+      <div class="stage">
+        <h1 class="giant" aria-label="${esc(featured.title)}">${esc(featured.title.toUpperCase())}</h1>
+        <div class="hero-art" data-open="${featured.key}">${artHTML(featured.cover, featured.title)}</div>
+      </div>
       <div class="hero-info reveal">
-        <p class="eyebrow">${featured === byDate[0] ? "Latest " : ""}${esc(featured.type)}</p>
-        <h1>${esc(featured.title)}</h1>
+        <p class="spaced">${spaced((featured === byDate[0] ? "Latest " : "") + featured.type)}</p>
         <div class="meta">${featured.date ? `<span>${year(featured.date)}</span>` : ""}${!featured.single ? `<span>${featured.tracks.length} songs</span>` : ""}<span data-total="${featured.key}"></span></div>
         ${featured.description ? `<p class="desc">${esc(featured.description)}</p>` : ""}
         <div class="actions">
@@ -86,10 +107,12 @@
           ${!featured.single ? `<button class="btn btn-ghost" data-open="${featured.key}">View ${esc(featured.type.toLowerCase())}</button>` : ""}
         </div>
       </div>`;
-    tintFrom(featured.cover);
+    applyTheme(document.documentElement, featured);
   } else {
-    hero.innerHTML = `<div class="hero-empty reveal"><p class="eyebrow">Coming soon</p><h1>New music on the way.</h1></div>`;
+    hero.innerHTML = `<div class="stage"><h1 class="giant">SOON</h1></div><div class="hero-info"><p class="spaced">${spaced("New music on the way")}</p></div>`;
   }
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => fitGiant());
+  fitGiant();
 
   /* ---------- Releases grid ---------- */
   const relGrid = $("#releases");
@@ -146,13 +169,14 @@
   let sheetOpen = false, modalOpen = false;
   function openRelease(key, scrollToLyrics) {
     const r = releases.find((x) => x.key === key); if (!r) return;
-    $("#sheet-bg").style.backgroundImage = r.cover ? `url("${r.cover}")` : "none";
+    $("#sheet-bg").innerHTML = `<div class="giant" aria-hidden="true">${esc(r.title.toUpperCase())}</div>`;
+    applyTheme(sheet, r);
     const one = r.single ? r.tracks[0] : null;
     sheetBody.innerHTML = `
       <div class="rel-head">
         <div class="art">${artHTML(r.cover, r.title)}</div>
         <div>
-          <p class="eyebrow">${esc(r.type)}</p>
+          <p class="spaced">${spaced(r.type)}</p>
           <h1>${esc(r.title)}</h1>
           <div class="meta">${r.date ? `<span>${year(r.date)}</span>` : ""}${!r.single ? `<span>${r.tracks.length} songs</span>` : ""}<span data-total="${r.key}"></span></div>
           <div class="actions">
@@ -171,6 +195,7 @@
         </li>`).join("")}${!r.tracks.length ? `<p class="empty">Songs coming soon.</p>` : ""}</ol>
       ${r.tracks.filter((t) => t.lyrics).map((t) => `<section class="lyrics" id="lyrics-${esc(t.id)}"><h3>${r.single ? "Lyrics" : esc(t.title) + " — Lyrics"}</h3><pre>${esc(t.lyrics)}</pre></section>`).join("")}`;
     updateTotals(); markPlaying();
+    requestAnimationFrame(() => fitGiant(sheet));
     if (!sheetOpen) history.pushState({ sheet: key }, "");
     sheetOpen = true; sheet.classList.add("open"); sheet.setAttribute("aria-hidden", "false"); document.body.classList.add("locked");
     sheet.scrollTop = 0;
@@ -232,7 +257,6 @@
     $("#pl-sub").textContent = rel && !rel.single ? rel.title : rel?.type || "";
     $("#pl-lyrics").hidden = !s.lyrics;
     $("#pl-video").hidden = !(s.video || s.youtube);
-    tintFrom(cov);
     markPlaying();
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: "Dawn Sogni", album: rel && !rel.single ? rel.title : "", artwork: cov ? [{ src: new URL(cov, location.href).href, sizes: "1080x1080", type: "image/jpeg" }] : [] });
