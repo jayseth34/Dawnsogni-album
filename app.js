@@ -15,7 +15,28 @@
 
   /* ---------- Content ---------- */
   let C = {};
-  try { C = await (await fetch("content.json?v=" + Date.now(), { cache: "no-store" })).json(); } catch {}
+  /* Live content: read the newest content.json straight from GitHub (no waiting for the Pages rebuild),
+     falling back to the deployed copy. Newly uploaded files load from GitHub until Pages has them. */
+  const REPO = (() => {
+    const owner = location.hostname.endsWith(".github.io") ? location.hostname.split(".")[0] : "jayseth34";
+    const repo = location.hostname.endsWith(".github.io") ? (location.pathname.split("/")[1] || "dawnsogni-album") : "dawnsogni-album";
+    return { owner, repo, branch: "gh-pages" };
+  })();
+  const RAW = `https://raw.githubusercontent.com/${REPO.owner}/${REPO.repo}/${REPO.branch}/`;
+  async function loadContent() {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.repo}/contents/content.json?ref=${REPO.branch}&t=${Date.now()}`, { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" });
+      if (r.ok) return await r.json();
+    } catch {}
+    return await (await fetch("content.json?v=" + Date.now(), { cache: "no-store" })).json();
+  }
+  try { C = await loadContent(); } catch {}
+  // media fallback: if a freshly uploaded file isn't on Pages yet, load it from GitHub directly
+  const rawUrl = (u) => { try { const x = new URL(u, location.href); const i = x.pathname.indexOf("/media/"); return i >= 0 && x.origin === location.origin ? RAW + x.pathname.slice(i + 1) : null; } catch { return null; } };
+  document.addEventListener("error", (e) => {
+    const el = e.target; if (!el || !/^(IMG|VIDEO|AUDIO)$/.test(el.tagName) || el.dataset.raw) return;
+    const alt = rawUrl(el.currentSrc || el.src); if (alt) { el.dataset.raw = 1; el.src = alt; }
+  }, true);
   const brand = C.brand || {};
   const albums = C.albums || [];
   const songs = (C.songs || []).filter((s) => s.audio || s.video || s.youtube || s.title);
@@ -70,6 +91,7 @@
   songs.forEach((s) => {
     if (!s.audio) return;
     const a = new Audio(); a.preload = "metadata"; a.src = s.audio;
+    a.onerror = () => { const alt = !a._raw && rawUrl(a.src); if (alt) { a._raw = 1; a.src = alt; } };
     a.onloadedmetadata = () => { dur[s.id] = a.duration; $$(`[data-dur="${CSS.escape(s.id)}"]`).forEach((el) => (el.textContent = fmt(a.duration))); totals(); };
   });
   const totLen = (r) => r.tracks.reduce((t, s) => t + (dur[s.id] || 0), 0);
@@ -315,11 +337,12 @@
     const s = queue[qi], rel = releaseOf(s), cov = coverOf(s);
     if (!audio) {
       audio = new Audio(); audio.preload = "auto"; audio.volume = +$("#vol").value;
+      audio.addEventListener("error", () => { const alt = !audio.dataset.raw && rawUrl(audio.src); if (alt) { audio.dataset.raw = 1; audio.src = alt; audio.play().catch(() => {}); } });
       audio.addEventListener("timeupdate", time); audio.addEventListener("loadedmetadata", time);
       audio.addEventListener("play", mark); audio.addEventListener("pause", mark);
       audio.addEventListener("ended", () => (qi < queue.length - 1 ? playAt(qi + 1) : (audio.currentTime = 0, mark())));
     }
-    audio.src = s.audio; audio.play().catch(() => {});
+    delete audio.dataset.raw; audio.src = s.audio; audio.play().catch(() => {});
     player.classList.remove("idle");
     const cv = $("#np-cover"); cv.hidden = !cov; if (cov) cv.src = cov;
     $("#np-title").textContent = s.title;

@@ -300,7 +300,7 @@
       const li = log("Saving site content…");
       await putFile("content.json", b64utf8(JSON.stringify(data, null, 2) + "\n"), "Update site content", await getSha("content.json"));
       li.textContent = "Content saved"; li.className = "ok";
-      log(`Published — the live site updates in about a minute: ${siteUrl}`, "done");
+      log(`Published — live now. Refresh the site to see it: ${siteUrl}`, "done");
       dirty = false; render();
     } catch (e) {
       log("Failed: " + e.message + (e.status === 409 ? " (content changed at the same time — press Publish again)" : ""), "err");
