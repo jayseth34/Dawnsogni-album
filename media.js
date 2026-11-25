@@ -61,13 +61,19 @@
   async function video(file, onProgress) {
     const { w, h } = await videoInfo(file);
     const short = Math.min(w || 9999, h || 9999);
-    if (file.size <= 25 * MB && short <= 720 && /mp4/i.test(file.type)) return file;
+    if (file.size <= 15 * MB && short <= 720 && /mp4/i.test(file.type)) return file;
     const scale = !w || !h ? "scale=-2:720" : w >= h ? (h > 720 ? "scale=-2:720" : "scale=-2:-2") : (w > 720 ? "scale=720:-2" : "scale=-2:-2");
-    const common = ["-vf", scale, "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28", "-pix_fmt", "yuv420p", "-movflags", "+faststart"];
-    const data = await run(file, "out.mp4", [
-      [...common, "-c:a", "aac", "-b:a", "128k"],
-      [...common, "-an"]
+    // capped bitrate keeps even long videos small (≈ 10 MB per minute at 720p)
+    const enc = (sc, rate) => ["-vf", sc, "-r", "30", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30",
+      "-maxrate", rate, "-bufsize", "2400k", "-pix_fmt", "yuv420p", "-movflags", "+faststart"];
+    let data = await run(file, "out.mp4", [
+      [...enc(scale, "1000k"), "-c:a", "aac", "-b:a", "128k"],
+      [...enc(scale, "1000k"), "-an"]
     ], onProgress, "Compressing video");
+    if (data.byteLength > 30 * MB) {           // still big (very long video): go to 540p and a lower bitrate
+      const small = !w || !h || w >= h ? "scale=-2:540" : "scale=540:-2";
+      data = await run(file, "out.mp4", [[...enc(small, "700k"), "-c:a", "aac", "-b:a", "96k"]], onProgress, "Compressing more");
+    }
     const out = new File([data], base(file.name) + ".mp4", { type: "video/mp4" });
     return out.size < file.size ? out : file;
   }

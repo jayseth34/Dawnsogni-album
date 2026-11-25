@@ -329,28 +329,60 @@
     else fn(path, o);
   }
 
+  // Publishing uses Git's blob/tree/commit API: each file is sent once as a blob (with retries),
+  // then everything — files + content.json — lands in ONE commit. Far more reliable for big files.
+  const blobsDone = new Map(); // pending id -> { dest, sha }  (survives a failed publish, so retries skip finished uploads)
+  async function blob(contentB64, label) {
+    let last;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try { return (await gh("/git/blobs", { method: "POST", body: JSON.stringify({ content: contentB64, encoding: "base64" }) })).sha; }
+      catch (e) { last = e; if (e.status && e.status < 500 && e.status !== 408 && e.status !== 429) break; log(`${label}: retrying (${attempt})…`); await new Promise((r) => setTimeout(r, 1500 * attempt)); }
+    }
+    throw last;
+  }
   $("#publish").onclick = async () => {
     const btn = $("#publish"); btn.disabled = true;
     $("#log-box").hidden = false; $("#log").innerHTML = "";
     try {
       const ups = []; walk(data, "", (p, v) => typeof v === "string" && v.startsWith("pending:") && ups.push([p, v.slice(8)]));
       const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+      const tree = [];
       for (const [p, id] of ups) {
         const f = pending.get(id); if (!f) { set(p, ""); continue; }
-        const dest = `media/${stamp}-${slug(f.name)}.${ext(f.name)}`;
-        const li = log(`Uploading ${f.name} (${(f.size / 1048576).toFixed(1)} MB)…`);
-        await putFile(dest, await fileB64(f), `Upload ${f.name}`);
-        set(p, dest); pending.delete(id); li.textContent = `Uploaded ${f.name}`; li.className = "ok";
+        if (!blobsDone.has(id)) {
+          const li = log(`Uploading ${f.name} (${(f.size / 1048576).toFixed(1)} MB)…`);
+          const sha = await blob(await fileB64(f), f.name);
+          blobsDone.set(id, { dest: `media/${stamp}-${slug(f.name)}.${ext(f.name)}`, sha });
+          li.textContent = `Uploaded ${f.name}`; li.className = "ok";
+        }
+        const { dest, sha } = blobsDone.get(id);
+        tree.push({ path: dest, mode: "100644", type: "blob", sha });
       }
-      data.songs.forEach((s) => (s.youtube = ytId(s.youtube)));
-      data.videos.forEach((v) => (v.youtube = ytId(v.youtube)));
-      const li = log("Saving site content…");
-      await putFile("content.json", b64utf8(JSON.stringify(data, null, 2) + "\n"), "Update site content", await getSha("content.json"));
-      li.textContent = "Content saved"; li.className = "ok";
+      // swap pending tokens for real paths in a copy, so a failure leaves the editor untouched
+      const out = JSON.parse(JSON.stringify(data));
+      walk(out, "", (p, v) => {
+        if (typeof v === "string" && v.startsWith("pending:")) {
+          const done = blobsDone.get(v.slice(8)), ks = p.split("."), last = ks.pop();
+          ks.reduce((o, k) => o[k], out)[last] = done ? done.dest : "";
+        }
+      });
+      out.songs.forEach((x) => (x.youtube = ytId(x.youtube)));
+      out.videos.forEach((x) => (x.youtube = ytId(x.youtube)));
+      const li = log("Saving…");
+      tree.push({ path: "content.json", mode: "100644", type: "blob", sha: await blob(b64utf8(JSON.stringify(out, null, 2) + "\n"), "content.json") });
+      const ref = await gh(`/git/ref/heads/${encodeURIComponent(cfg.branch)}`);
+      const head = await gh(`/git/commits/${ref.object.sha}`);
+      const t = await gh("/git/trees", { method: "POST", body: JSON.stringify({ base_tree: head.tree.sha, tree }) });
+      const c = await gh("/git/commits", { method: "POST", body: JSON.stringify({ message: "Update site content", tree: t.sha, parents: [ref.object.sha] }) });
+      await gh(`/git/refs/heads/${encodeURIComponent(cfg.branch)}`, { method: "PATCH", body: JSON.stringify({ sha: c.sha }) });
+      // success: commit the real paths into the editor
+      for (const [p, id] of ups) { const d = blobsDone.get(id); if (d) { set(p, d.dest); pending.delete(id); blobsDone.delete(id); } }
+      data.songs.forEach((x) => (x.youtube = ytId(x.youtube))); data.videos.forEach((x) => (x.youtube = ytId(x.youtube)));
+      li.textContent = "Saved"; li.className = "ok";
       log(`Published — live now. Refresh the site to see it: ${siteUrl}`, "done");
-      dirty = false; render();
+      dirty = false; render(); btn.disabled = true;
     } catch (e) {
-      log("Failed: " + e.message + (e.status === 409 ? " (content changed at the same time — press Publish again)" : ""), "err");
+      log("Failed: " + e.message + " — press Publish again; finished uploads won't be repeated.", "err");
       btn.disabled = false;
     }
   };
