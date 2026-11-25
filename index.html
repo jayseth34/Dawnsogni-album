@@ -9,74 +9,89 @@
   <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="tint" aria-hidden="true"></div>
+  <div class="app">
+    <!-- Sidebar (desktop) -->
+    <aside class="side">
+      <nav class="panel side-nav">
+        <a href="#/" class="brand" aria-label="Home"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></a>
+        <a href="#/" class="nav-link" data-nav="home"><svg viewBox="0 0 24 24"><path d="M12 3 2 11h3v10h6v-6h2v6h6V11h3z"/></svg>Home</a>
+        <a href="#/videos" class="nav-link" data-nav="videos"><svg viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Videos</a>
+        <a href="#" class="nav-link shop-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 7V6a5 5 0 0 1 10 0v1h3l-1 14H5L4 7zm2 0h6V6a3 3 0 0 0-6 0z"/></svg>Shop <span class="ext">↗</span></a>
+      </nav>
+      <section class="panel library">
+        <div class="lib-head"><svg viewBox="0 0 24 24"><path d="M3 3h2v18H3zm5 0h2v18H8zm5.5.6 1.9-.6 5.6 17.7-1.9.6z"/></svg>Your Library</div>
+        <div class="chips" id="lib-chips"></div>
+        <ul class="lib-list" id="lib-list"></ul>
+      </section>
+    </aside>
 
-  <header class="hdr" id="hdr">
-    <nav class="hdr-nav">
-      <a href="#music">Music</a>
-      <a href="#videos" data-sec="videos" hidden>Videos</a>
-      <a href="#events" data-sec="events" hidden>Events</a>
-    </nav>
-    <a href="#top" class="hdr-logo" aria-label="Home"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></a>
-    <a class="hdr-shop" id="shop-link" href="https://jayseth34.github.io/DawnSogniWeb/" target="_blank" rel="noopener">Shop <span aria-hidden="true">↗</span></a>
-  </header>
-
-  <main id="top">
-    <section class="hero" id="hero"></section>
-
-    <section class="sec" id="music">
-      <div class="sec-head">
-        <h2>Music</h2>
-        <div class="chips" id="chips"></div>
+    <!-- Main view -->
+    <main class="panel main" id="main">
+      <div class="topbar" id="topbar">
+        <div class="tb-nav">
+          <button class="circle" onclick="history.back()" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15.5 4 7.5 12l8 8 1.4-1.4L10.3 12l6.6-6.6z"/></svg></button>
+          <button class="circle" onclick="history.forward()" aria-label="Forward"><svg viewBox="0 0 24 24"><path d="m8.5 4 8 8-8 8-1.4-1.4 6.6-6.6-6.6-6.6z"/></svg></button>
+        </div>
+        <div class="tb-title" id="tb-title"></div>
+        <a href="#" class="pill shop-link" target="_blank" rel="noopener">Shop ↗</a>
       </div>
-      <div class="grid" id="releases"></div>
-    </section>
+      <div id="view"></div>
+    </main>
 
-    <section class="sec" id="videos" hidden>
-      <div class="sec-head"><h2>Videos</h2></div>
-      <div class="vgrid" id="video-grid"></div>
-    </section>
+    <!-- Player -->
+    <footer class="player" id="player">
+      <div class="np" id="np">
+        <img class="np-cover" id="np-cover" alt="" hidden />
+        <div class="np-meta"><div class="np-title" id="np-title"></div><div class="np-sub" id="np-sub"></div></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-btns">
+          <button id="b-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 18V6z"/></svg></button>
+          <button id="b-play" class="b-play" aria-label="Play"><svg viewBox="0 0 24 24"><path class="ico-play" d="M8 5v14l11-7z"/></svg></button>
+          <button id="b-next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+        </div>
+        <div class="seek"><span id="t-cur">0:00</span><div class="bar" id="seek"><div class="fill" id="seek-fill"></div></div><span id="t-dur">0:00</span></div>
+      </div>
+      <div class="extra">
+        <button id="b-lyrics" class="ico-btn" title="Lyrics" disabled><svg viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3zm3 4v2h10V8zm0 4v2h7v-2z"/></svg></button>
+        <button id="b-video" class="ico-btn" title="Video" disabled><svg viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></button>
+        <svg class="vol-ico" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+        <input type="range" id="vol" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+      </div>
+    </footer>
 
-    <section class="sec" id="events" hidden>
-      <div class="sec-head"><h2>Events</h2></div>
-      <ul class="events" id="event-list"></ul>
-    </section>
-
-    <footer class="foot" id="foot"></footer>
-  </main>
-
-  <!-- Release sheet -->
-  <div class="sheet" id="sheet" aria-hidden="true">
-    <div class="sheet-bg" id="sheet-bg"></div>
-    <button class="x-btn" id="sheet-close" aria-label="Close">✕</button>
-    <div class="sheet-body" id="sheet-body"></div>
+    <!-- Mobile tab bar -->
+    <nav class="tabs" id="tabs">
+      <a href="#/" data-nav="home"><svg viewBox="0 0 24 24"><path d="M12 3 2 11h3v10h6v-6h2v6h6V11h3z"/></svg>Home</a>
+      <a href="#/videos" data-nav="videos"><svg viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Videos</a>
+      <a href="#/library" data-nav="library"><svg viewBox="0 0 24 24"><path d="M3 3h2v18H3zm5 0h2v18H8zm5.5.6 1.9-.6 5.6 17.7-1.9.6z"/></svg>Library</a>
+      <a href="#" class="shop-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 7V6a5 5 0 0 1 10 0v1h3l-1 14H5L4 7zm2 0h6V6a3 3 0 0 0-6 0z"/></svg>Shop</a>
+    </nav>
   </div>
+
+  <!-- Full-screen now playing (mobile) -->
+  <section class="full" id="full" aria-hidden="true">
+    <div class="full-head"><button class="circle" id="full-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="m12 15.5-7-7 1.4-1.4 5.6 5.6 5.6-5.6L19 8.5z"/></svg></button><span id="full-from"></span><span></span></div>
+    <img class="full-cover" id="full-cover" alt="" />
+    <div class="full-meta"><div><div class="full-title" id="full-title"></div><div class="np-sub" id="full-sub"></div></div></div>
+    <div class="seek full-seek"><div class="bar" id="seek2"><div class="fill" id="seek2-fill"></div></div><div class="full-times"><span id="t2-cur">0:00</span><span id="t2-dur">0:00</span></div></div>
+    <div class="full-ctrl">
+      <button id="f-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 18V6z"/></svg></button>
+      <button id="f-play" class="b-play big" aria-label="Play"><svg viewBox="0 0 24 24"><path class="ico-play" d="M8 5v14l11-7z"/></svg></button>
+      <button id="f-next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+    </div>
+    <div class="full-extra"><button class="pill" id="f-video" hidden>Watch video</button></div>
+    <div class="lyrics-card" id="full-lyrics" hidden></div>
+  </section>
 
   <!-- Video modal -->
   <div class="modal" id="modal" aria-hidden="true">
-    <button class="x-btn" id="modal-close" aria-label="Close">✕</button>
+    <button class="circle modal-x" id="modal-close" aria-label="Close">✕</button>
     <div class="modal-frame" id="modal-frame"></div>
-  </div>
-
-  <!-- Player bar -->
-  <div class="player" id="player" hidden>
-    <div class="pl-progress" id="pl-progress"><div id="pl-fill"></div></div>
-    <img class="pl-cover" id="pl-cover" alt="" />
-    <div class="pl-meta"><div class="pl-title" id="pl-title"></div><div class="pl-sub" id="pl-sub"></div></div>
-    <div class="pl-ctrl">
-      <button id="pl-prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 18V6z"/></svg></button>
-      <button id="pl-play" class="pl-play" aria-label="Play"><svg viewBox="0 0 24 24"><path id="pl-icon" d="M8 5v14l11-7z"/></svg></button>
-      <button id="pl-next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
-    </div>
-    <div class="pl-time" id="pl-time">0:00 / 0:00</div>
-    <div class="pl-extra">
-      <button id="pl-lyrics" class="txt-btn" hidden>Lyrics</button>
-      <button id="pl-video" class="txt-btn" hidden>Video</button>
-    </div>
   </div>
 
   <script src="app.js"></script>

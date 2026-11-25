@@ -61,11 +61,42 @@
     const w = ctx.measureText(text).width; if (w > maxW) s = s * (maxW / w);
     return s;
   }
+  // A lone chair silhouette with a rim light (default subject — no logo needed)
+  function chair(accent) {
+    const c = document.createElement("canvas"), W = 420, H = 720; c.width = W; c.height = H;
+    const g = c.getContext("2d"), a = accent || [230, 210, 122];
+    const body = g.createLinearGradient(0, 0, W, 0);
+    body.addColorStop(0, "#0b0b0b"); body.addColorStop(0.7, "#1a1714"); body.addColorStop(1, "#2a241d");
+    g.fillStyle = body; g.strokeStyle = rgba(a, 0.55); g.lineWidth = 3; g.lineJoin = "round";
+    const P = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill(); };
+    // side-profile chair facing left; far legs are darker for depth
+    const far = "#060606";
+    g.fillStyle = far;
+    P([[118, 430], [136, 430], [140, 700], [124, 700]]);          // far front leg
+    P([[338, 60], [354, 60], [356, 688], [342, 688]]);            // far back post
+    g.fillStyle = body;
+    P([[296, 30], [320, 26], [330, 720], [308, 720]]);            // near back post (slight lean)
+    P([[296, 70], [336, 66], [338, 96], [298, 100]]);             // top rail
+    P([[298, 170], [340, 166], [342, 186], [300, 190]]);          // mid rail
+    P([[60, 404], [344, 398], [346, 428], [62, 434]]);            // seat
+    P([[70, 430], [94, 430], [100, 720], [78, 720]]);             // near front leg
+    P([[90, 600], [312, 596], [312, 612], [92, 616]]);            // stretcher
+    // rim light on the lit top/right edges
+    g.beginPath();
+    g.moveTo(320, 26); g.lineTo(330, 720);
+    g.moveTo(60, 404); g.lineTo(344, 398);
+    g.moveTo(94, 430); g.lineTo(100, 720);
+    g.moveTo(296, 70); g.lineTo(336, 66);
+    g.stroke();
+    return c;
+  }
+
   // Subject standing on the floor at baseY, with contact shadow and optional reflection
   function subject(ctx, img, cx, baseY, maxW, maxH, { reflect = 0.25, shadow = 0.6, shadowDX = 0 } = {}) {
-    if (!img || !img.naturalWidth) return;
-    let w = maxW, h = w * (img.naturalHeight / img.naturalWidth);
-    if (h > maxH) { h = maxH; w = h * (img.naturalWidth / img.naturalHeight); }
+    const iw = img && (img.naturalWidth || img.width), ih = img && (img.naturalHeight || img.height);
+    if (!iw) return;
+    let w = maxW, h = w * (ih / iw);
+    if (h > maxH) { h = maxH; w = h * (iw / ih); }
     const x = cx - w / 2, y = baseY - h;
     ctx.save();
     const sg = ctx.createRadialGradient(cx + shadowDX, baseY, 0, cx + shadowDX, baseY, w * 0.6);
@@ -120,7 +151,7 @@
       beam(ctx, -W * 0.04, -H * 0.06, Math.PI * 0.26, W * 1.3, W * 0.55, a, 0.6);
       fog(ctx, W, H, rnd, mix(c, [255, 255, 255], 0.3), 18, 0.62, 1, 0.16);
       // subject
-      subject(ctx, o.subject, W * 0.5, floorY + H * 0.05, W * (o.subjectIsLogo ? 0.62 : 0.5), H * 0.5, { reflect: 0.3, shadowDX: W * 0.06 });
+      subject(ctx, o.subject, W * (o.subjectIsLogo ? 0.5 : 0.56), floorY + H * 0.05, W * (o.subjectIsLogo ? 0.62 : 0.5), H * (o.subjectIsLogo ? 0.5 : 0.42), { reflect: 0.3, shadowDX: W * 0.06 });
       // spaced word across
       const sm = small || o.line || "";
       if (sm) {
@@ -203,6 +234,7 @@
     const W = canvas.width, H = canvas.height, ctx = canvas.getContext("2d");
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, W, H);
+    if (o.subject === "chair" || o.subject == null) o = { ...o, subject: o.subject === null ? null : chair(hex(o.accent)), subjectIsLogo: false };
     (STYLES[o.style] || STYLES.spotlight)(ctx, W, H, o, rng(o.seed || 7));
   }
   window.DSCover = { render, loadFonts, styles: Object.keys(STYLES) };

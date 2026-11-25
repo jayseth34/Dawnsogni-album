@@ -272,14 +272,14 @@
   /* ---------- Cover maker ---------- */
   const PRESETS = { spotlight: ["#1f5a3c", "#e6d27a"], glow: ["#1d3b2a", "#d4552b"], studio: ["#b0121b", "#e08ad8"] };
   const logoImg = new Image(); logoImg.src = "assets/ds-mark.png";
-  const cm = { path: "", style: "spotlight", subject: null, isLogo: true, seed: 7 };
+  const cm = { path: "", style: "spotlight", subject: "chair", seed: 7 };
   const cmCanvas = $("#cm-canvas");
   async function drawMaker(canvas = cmCanvas) {
     if (!logoImg.complete) await logoImg.decode().catch(() => {});
     await DSCover.render(canvas, {
       style: cm.style, title: $("#cm-title").value, line: $("#cm-line").value,
       color: $("#cm-color").value, accent: $("#cm-accent").value,
-      subject: cm.subject || logoImg, subjectIsLogo: !cm.subject, seed: cm.seed
+      subject: cm.subject === "logo" ? logoImg : cm.subject, subjectIsLogo: cm.subject === "logo", seed: cm.seed
     });
   }
   function openMaker(path) {
@@ -299,7 +299,9 @@
   };
   ["cm-title", "cm-line", "cm-color", "cm-accent"].forEach((id) => ($("#" + id).oninput = () => drawMaker()));
   $("#cm-seed").onclick = () => { cm.seed = (Math.random() * 1e9) | 0; drawMaker(); };
-  $("#cm-logo").onclick = () => { cm.subject = null; drawMaker(); };
+  $("#cm-logo").onclick = () => { cm.subject = "logo"; drawMaker(); };
+  $("#cm-chair").onclick = () => { cm.subject = "chair"; drawMaker(); };
+  $("#cm-none").onclick = () => { cm.subject = null; drawMaker(); };
   $("#cm-subject").onchange = (e) => {
     const f = e.target.files[0]; if (!f) return;
     const img = new Image(); img.onload = () => { cm.subject = img; drawMaker(); }; img.src = URL.createObjectURL(f);
