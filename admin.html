@@ -6,14 +6,10 @@
   <meta name="robots" content="noindex, nofollow" />
   <title>Admin — Dawn Sogni</title>
   <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
   <header class="bar">
-    <img src="assets/ds-logo-dark.png" alt="" class="bar-logo" />
     <span class="bar-title">Admin</span>
     <div class="bar-actions">
       <a href="./" target="_blank" class="ghost">View site ↗</a>
@@ -24,110 +20,23 @@
   <main class="wrap">
     <section class="box" id="connect-box">
       <h2>Connect</h2>
-      <p class="hint">Publishing writes straight to your GitHub repo and shows on the site right away. Your token stays only in this browser.
-        Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a> with access to
-        <b>only this repository</b> and <b>Contents: Read and write</b> (add <b>Pages: Read</b> to detect the live branch automatically).</p>
-      <div class="grid4">
-        <label>Owner<input id="cfg-owner" value="jayseth34" /></label>
-        <label>Repository<input id="cfg-repo" value="dawnsogni-album" /></label>
-        <label>Branch (live site)<input id="cfg-branch" value="gh-pages" /></label>
-        <label>Token<input id="cfg-token" type="password" placeholder="github_pat_…" autocomplete="off" /></label>
-      </div>
+      <p class="hint">Paste your GitHub token once (it stays only in this browser). Create a
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
+        for <b>only this repository</b> with <b>Contents: Read and write</b>.</p>
       <div class="row">
+        <input id="cfg-token" type="password" placeholder="github_pat_…" autocomplete="off" style="flex:1;min-width:220px" />
         <button class="btn" id="connect">Connect</button>
-        <button class="ghost" id="forget">Forget token</button>
-        <span class="status" id="connect-status"></span>
+        <button class="ghost" id="forget">Forget</button>
       </div>
+      <span class="status" id="connect-status"></span>
     </section>
 
-    <div id="editor" hidden>
-      <nav class="tabs" id="tabs">
-        <button data-tab="artist">Artist</button>
-        <button data-tab="songs" class="on">Songs</button>
-        <button data-tab="lyrics">Lyrics</button>
-        <button data-tab="albums">Albums</button>
-        <button data-tab="videos">Videos</button>
-        <button data-tab="events">Events</button>
-        <button data-tab="settings">Settings</button>
-      </nav>
-
-      <section class="tab" data-tab="artist" hidden>
-        <div class="box">
-          <h2>Artist profile</h2>
-          <p class="hint">This is the top of your homepage — like an artist page on Spotify.</p>
-          <div class="grid3">
-            <label>Artist name<input data-bind="artist.name" placeholder="Dawn Sogni" /></label>
-            <label>Real name (optional)<input data-bind="artist.realName" /></label>
-            <label>Tagline<input data-bind="artist.tagline" placeholder="Rapper · Songwriter" /></label>
-          </div>
-          <label>Bio (shows in the About card)<textarea data-bind="artist.bio" rows="5" placeholder="Who you are, where you're from, what your music is about…"></textarea></label>
-          <div class="upload-row" data-upload="artist.photo" data-accept="image/*" data-label="Artist photo (banner + About card)"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="songs">
-        <div class="box">
-          <div class="box-head"><h2>Songs</h2><button class="btn small" data-add="songs">+ Add song</button></div>
-          <p class="hint">Uploads are optimised automatically before publishing: videos are compressed to 720p, big or WAV audio becomes M4A, large images are resized — and if you add a video, its audio is extracted for the song.<br>Pick an album for each song, or leave it as a single. Songs inside an album play in the order shown here; use ↑ ↓ to reorder.</p>
-          <div class="list" id="list-songs"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="lyrics" hidden>
-        <div class="box">
-          <h2>Lyrics</h2>
-          <p class="hint">Paste the lyrics for each song, one line per line. Press <b>Sync with audio</b> to time them: play the song and tap
-            <b>Stamp</b> (or the space bar) as each line starts — the site then highlights and scrolls the lyrics live, like Spotify.
-            You can also type timings yourself as <code>[01:23.40] line</code>.</p>
-          <div class="list" id="lyrics-list"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="albums" hidden>
-        <div class="box">
-          <div class="box-head"><h2>Albums</h2><button class="btn small" data-add="albums">+ Add album</button></div>
-          <p class="hint">Create the album here, then choose it on each song in the Songs tab.</p>
-          <div class="list" id="list-albums"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="videos" hidden>
-        <div class="box">
-          <div class="box-head"><h2>Other videos</h2><button class="btn small" data-add="videos">+ Add video</button></div>
-          <p class="hint">A song's own lyric or music video goes on the song itself. Use this for anything else (films, behind the scenes…).</p>
-          <div class="list" id="list-videos"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="events" hidden>
-        <div class="box">
-          <div class="box-head"><h2>Events</h2><button class="btn small" data-add="events">+ Add event</button></div>
-          <div class="list" id="list-events"></div>
-        </div>
-      </section>
-
-      <section class="tab" data-tab="settings" hidden>
-        <div class="box">
-          <h2>Homepage</h2>
-          <label>Featured release (top of the homepage)<select id="featured"></select></label>
-        </div>
-        <div class="box">
-          <h2>Links</h2>
-          <div class="grid2">
-            <label>Shop URL<input data-bind="brand.shopUrl" /></label>
-            <label>Instagram URL<input data-bind="brand.instagram" /></label>
-            <label>Spotify URL<input data-bind="brand.spotify" /></label>
-            <label>Apple Music URL<input data-bind="brand.appleMusic" /></label>
-            <label>YouTube URL<input data-bind="brand.youtube" /></label>
-          </div>
-        </div>
-        <div class="box">
-          <h2>Clean up</h2>
-          <p class="hint">Deletes uploaded files in <code>media/</code> that nothing on the site uses anymore. Publish first.</p>
-          <div><button class="ghost" id="cleanup">Delete unused files</button></div>
-        </div>
-      </section>
-    </div>
+    <section class="box" id="editor" hidden>
+      <div class="box-head"><h2>Songs</h2><button class="btn small" id="add">+ Add song</button></div>
+      <p class="hint">For each song: a title, the audio, a cover picture and the lyrics. Big files are compressed automatically
+        (a video dropped in the audio slot is turned into audio). Then press <b>Publish</b>.</p>
+      <div class="list" id="list"></div>
+    </section>
 
     <section class="box log" id="log-box" hidden>
       <h2>Publishing</h2>
@@ -135,55 +44,6 @@
     </section>
   </main>
 
-  <!-- Lyrics sync tool -->
-  <div class="cm" id="sy" hidden>
-    <div class="cm-card sy-card">
-      <div class="box-head"><h2 id="sy-title">Sync lyrics</h2><button class="ghost small" id="sy-close">Close</button></div>
-      <audio id="sy-audio" controls preload="auto"></audio>
-      <div class="row">
-        <button class="btn" id="sy-stamp">Stamp line (Space)</button>
-        <button class="ghost" id="sy-undo">Undo</button>
-        <button class="ghost" id="sy-restart">Start over</button>
-        <span class="status" id="sy-status"></span>
-      </div>
-      <ol class="sy-lines" id="sy-lines"></ol>
-      <div class="row"><button class="btn" id="sy-save">Save timings</button><span class="hint">Lines you don't reach stay untimed and won't show in synced mode.</span></div>
-    </div>
-  </div>
-
-  <!-- Cover maker -->
-  <div class="cm" id="cm" hidden>
-    <div class="cm-card">
-      <div class="cm-preview"><canvas id="cm-canvas" width="900" height="900"></canvas></div>
-      <div class="cm-side">
-        <div class="box-head"><h2>Design a cover</h2><button class="ghost small" id="cm-close">Close</button></div>
-        <div class="cm-styles" id="cm-styles">
-          <button data-style="gothic" class="on">Gothic</button>
-          <button data-style="spotlight">Spotlight</button>
-          <button data-style="glow">Glow</button>
-          <button data-style="studio">Studio</button>
-        </div>
-        <label>Title<input id="cm-title" /></label>
-        <label>Small line (optional)<input id="cm-line" placeholder="e.g. Single, Vol. I" /></label>
-        <div class="grid2">
-          <label>Colour<input type="color" id="cm-color" value="#1a1a1c" /></label>
-          <label>Light colour<input type="color" id="cm-accent" value="#e9e4d8" /></label>
-        </div>
-        <label>Subject</label>
-        <div class="upload">
-          <span class="ghost small pick">Upload photo / PNG<input type="file" id="cm-subject" accept="image/*" /></span>
-          <button class="ghost small" id="cm-chair">Chair</button>
-          <button class="ghost small" id="cm-none">Nothing</button>
-          <button class="ghost small" id="cm-logo">DS logo</button>
-          <button class="ghost small" id="cm-seed">Shuffle fog</button>
-        </div>
-        <p class="hint">Tip: a photo with a transparent background (PNG cut-out of you, a mic, shoes…) looks best — like a real poster.</p>
-        <button class="btn" id="cm-use">Use this cover</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="cover.js"></script>
   <script src="media.js"></script>
   <script src="admin.js"></script>
 </body>
