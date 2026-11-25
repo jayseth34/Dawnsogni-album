@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "email": "",
+    "instagram": "",
+    "spotify": "",
+    "appleMusic": "",
+    "youtube": ""
+  },
+  "album": {
+    "title": "",
+    "description": "",
+    "releaseDate": "",
+    "cover": "",
+    "tracks": []
+  },
+  "videos": [],
+  "products": [],
+  "drops": [],
+  "customOrders": true,
+  "currency": "₹"
+}
