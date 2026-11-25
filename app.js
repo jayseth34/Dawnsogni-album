@@ -47,6 +47,24 @@
 
   const art = (src, title, cls = "") => (src ? `<img class="${cls}" src="${esc(src)}" alt="" loading="lazy" />` : `<div class="ph ${cls}">${esc((title || "?").trim()[0] || "?")}</div>`);
 
+  /* ---------- Lyrics ---------- */
+  // Plain text, or synced with [mm:ss.xx] at the start of lines (LRC style)
+  const TS = /^\s*\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/;
+  function parseLyrics(text) {
+    const raw = String(text || "").replace(/\r/g, "").split("\n");
+    const lines = raw.map((l) => { const m = l.match(TS); return m ? { t: +m[1] * 60 + +m[2], text: m[3] } : { t: null, text: l.replace(/^\s*\[[^\]]*\]\s?/, "") }; });
+    const stamped = lines.filter((l) => l.t !== null).length;
+    const synced = stamped > 0 && stamped >= lines.filter((l) => l.text.trim()).length * 0.6;
+    return { synced, lines: synced ? lines.filter((l) => l.t !== null) : lines };
+  }
+  const plainLyrics = (text) => parseLyrics(text).lines.map((l) => l.text).join("\n");
+  const lyricLines = (song) => {
+    const L = parseLyrics(song.lyrics);
+    return `<div class="ly ${L.synced ? "synced" : ""}" data-ly="${esc(song.id)}">${L.lines.map((l, i) =>
+      `<p class="ly-line" data-i="${i}" ${l.t !== null ? `data-t="${l.t}"` : ""}>${esc(l.text) || "&nbsp;"}</p>`).join("")}</div>`;
+  };
+  const withLyrics = () => songs.filter((s) => s.lyrics && s.lyrics.trim());
+
   /* ---------- Durations ---------- */
   const dur = {};
   songs.forEach((s) => {
@@ -190,7 +208,7 @@
               <span class="d" data-dur="${esc(t.id)}">${fmt(dur[t.id])}</span>
             </div>`).join("") || `<p class="empty" style="padding:40px 0">Songs coming soon.</p>`}
         </div>
-        ${r.tracks.filter((t) => t.lyrics).map((t) => `<section class="lyrics-card"><h3>${r.single ? "Lyrics" : esc(t.title)}</h3><pre>${esc(t.lyrics)}</pre></section>`).join("")}
+        ${r.tracks.filter((t) => t.lyrics).map((t) => `<section class="lyrics-card"><div class="lc-head"><h3>${r.single ? "Lyrics" : esc(t.title)}</h3><a class="txt-act" href="#/lyrics/${encodeURIComponent(t.id)}">Open lyrics</a></div><pre>${esc(plainLyrics(t.lyrics))}</pre></section>`).join("")}
         ${shelf("More releases", more.map(card).join(""))}
         ${foot()}`;
     },
@@ -199,6 +217,36 @@
       theme(featured);
       return `<div class="wash"></div><h1 class="page-title">Videos</h1>
         ${videos.length ? `<section class="shelf"><div class="cards">${videos.map(vcard).join("")}</div></section>` : `<p class="empty">No videos yet.</p>`}${foot()}`;
+    },
+
+    lyricsIndex() {
+      theme(featured);
+      const L = withLyrics();
+      return `<div class="wash"></div><h1 class="page-title">Lyrics</h1>
+        ${L.length ? `<ul class="lib-list lib-page">${L.map((s) => `
+          <li class="lib-row" data-go="#/lyrics/${encodeURIComponent(s.id)}">
+            ${coverOf(s) ? `<img class="thumb" src="${esc(coverOf(s))}" alt="" />` : `<div class="thumb">${art("", s.title)}</div>`}
+            <div><div class="t">${esc(s.title)}</div><div class="s">${parseLyrics(s.lyrics).synced ? "Synced lyrics" : "Lyrics"} • ${esc(releaseOf(s)?.title || "")}</div></div>
+          </li>`).join("")}</ul>` : `<p class="empty">Lyrics coming soon.</p>`}${foot()}`;
+    },
+
+    lyrics(id) {
+      const s = songs.find((x) => x.id === id); if (!s || !s.lyrics) return VIEWS.lyricsIndex();
+      const r = releaseOf(s); theme(r);
+      const synced = parseLyrics(s.lyrics).synced;
+      return `<div class="wash"></div>
+        <section class="ly-head">
+          ${coverOf(s) ? `<img src="${esc(coverOf(s))}" alt="" />` : ""}
+          <div><div class="rhead-type">Lyrics${synced ? " • synced" : ""}</div><h1>${esc(s.title)}</h1>
+            <div class="actions" style="padding:14px 0 0">
+              ${s.audio ? `<button class="big-play" data-playsong="${esc(s.id)}" aria-label="Play">${P}</button>` : ""}
+              ${r ? `<a class="txt-act" href="#/r/${r.key}">${esc(r.type)}: ${esc(r.title)}</a>` : ""}
+            </div>
+          </div>
+        </section>
+        <section class="ly-page">${lyricLines(s)}</section>
+        ${synced ? `<p class="ly-hint">Tap a line to jump there</p>` : ""}
+        ${foot()}`;
     },
 
     library() {
@@ -212,13 +260,15 @@
     let html, name = "home", title = "";
     if (h.startsWith("#/r/")) { const k = decodeURIComponent(h.slice(4)); html = VIEWS.release(k); name = "release"; title = byKey[k]?.title || ""; }
     else if (h === "#/videos") { html = VIEWS.videos(); name = "videos"; title = "Videos"; }
+    else if (h === "#/lyrics") { html = VIEWS.lyricsIndex(); name = "lyrics"; title = "Lyrics"; }
+    else if (h.startsWith("#/lyrics/")) { const id = decodeURIComponent(h.slice(9)); html = VIEWS.lyrics(id); name = "lyrics"; title = songs.find((x) => x.id === id)?.title || "Lyrics"; }
     else if (h === "#/library") { html = VIEWS.library(); name = "library"; title = "Your Library"; }
     else html = VIEWS.home();
     view.innerHTML = html;
     $("#tb-title").textContent = title;
     $$("[data-nav]").forEach((a) => a.classList.toggle("on", a.dataset.nav === name));
     main.scrollTo(0, 0); scrollTo(0, 0);
-    renderLibrary(); totals(); mark(); fitGiant();
+    renderLibrary(); totals(); mark(); fitGiant(); lastLine = -2; syncLyrics(true);
     if (document.fonts) document.fonts.ready.then(fitGiant);
     onScroll();
   }
@@ -280,7 +330,8 @@
     $("#full-title").textContent = s.title; $("#full-sub").textContent = rel && !rel.single ? rel.title : rel?.type || "";
     $("#full-from").textContent = rel ? rel.title : "";
     $("#f-video").hidden = !(s.video || s.youtube);
-    const fl = $("#full-lyrics"); fl.hidden = !s.lyrics; fl.innerHTML = s.lyrics ? `<h3>Lyrics</h3><pre>${esc(s.lyrics)}</pre>` : "";
+    const fl = $("#full-lyrics"); fl.hidden = !s.lyrics; fl.innerHTML = s.lyrics ? `<h3>Lyrics</h3>${lyricLines(s)}` : "";
+    lastLine = -2;
     if (!location.hash.startsWith("#/r/") || location.hash === "#/r/" + rel?.key) theme(rel);
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({ title: s.title, artist: "Dawn Sogni", album: rel && !rel.single ? rel.title : "", artwork: cov ? [{ src: new URL(cov, location.href).href, sizes: "1500x1500", type: "image/jpeg" }] : [] });
@@ -297,12 +348,31 @@
     $("#seek-fill").style.width = $("#seek2-fill").style.width = p + "%";
     $("#t-cur").textContent = $("#t2-cur").textContent = fmt(audio.currentTime);
     $("#t-dur").textContent = $("#t2-dur").textContent = fmt(audio.duration);
+    syncLyrics();
+  }
+
+  /* ---------- Synced lyrics highlight ---------- */
+  let lastLine = -2, userScrollAt = 0;
+  ["wheel", "touchmove"].forEach((ev) => addEventListener(ev, () => (userScrollAt = Date.now()), { passive: true }));
+  function syncLyrics(force) {
+    const s = queue[qi];
+    $$(".ly.synced").forEach((box) => {
+      const lines = $$(".ly-line", box), mine = s && box.dataset.ly === s.id && audio;
+      let idx = -1;
+      if (mine) { const t = audio.currentTime + 0.15; lines.forEach((l, i) => { if (+l.dataset.t <= t) idx = i; }); }
+      if (!force && idx === lastLine && box.dataset.last == idx) return;
+      box.dataset.last = idx;
+      lines.forEach((l, i) => { l.classList.toggle("active", i === idx); l.classList.toggle("past", idx >= 0 && i < idx); });
+      if (idx >= 0 && Date.now() - userScrollAt > 2500 && box.offsetParent) lines[idx].scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+    lastLine = queue[qi] ? lastLine : -2;
   }
   function mark() {
     const playing = !!(audio && !audio.paused), cur = queue[qi];
     $$(".ico-play").forEach((p) => p.setAttribute("d", playing ? "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" : "M8 5v14l11-7z"));
     $$(".tl-row").forEach((el) => el.classList.toggle("playing", !!cur && el.dataset.song === cur.id));
     $$(".big-play[data-play]").forEach((b) => { const r = byKey[b.dataset.play]; b.innerHTML = r && isPlayingRel(r) ? PAUSE : P; });
+    $$("[data-playsong]").forEach((b) => (b.innerHTML = playing && cur && cur.id === b.dataset.playsong ? PAUSE : P));
     const curRel = cur && releaseOf(cur);
     $$(".lib-row").forEach((el) => el.classList.toggle("playing", !!curRel && el.dataset.go === "#/r/" + curRel.key));
   }
@@ -314,7 +384,7 @@
   $("#b-next").onclick = () => playAt(qi + 1); $("#f-next").onclick = () => playAt(qi + 1);
   $("#vol").oninput = (e) => { if (audio) audio.volume = +e.target.value; };
   $("#b-video").onclick = $("#f-video").onclick = () => openVideo(videoOfSong(queue[qi]?.id));
-  $("#b-lyrics").onclick = () => { const r = releaseOf(queue[qi]); if (r) location.hash = "#/r/" + r.key; setTimeout(() => $(".lyrics-card")?.scrollIntoView({ behavior: "smooth" }), 200); };
+  $("#b-lyrics").onclick = () => { const s = queue[qi]; if (s) location.hash = "#/lyrics/" + encodeURIComponent(s.id); };
   // tapping now-playing: mobile opens full player, desktop opens the release
   const full = $("#full");
   $("#np").onclick = () => {
@@ -330,6 +400,16 @@
   document.addEventListener("click", (e) => {
     const t = e.target;
     const play = t.closest("[data-play]"), v = t.closest("[data-video]"), vc = t.closest("[data-vid]"), row = t.closest(".tl-row"), go = t.closest("[data-go]");
+    const ps = t.closest("[data-playsong]"), line = t.closest(".ly.synced .ly-line");
+    if (ps || line) {
+      const id = ps ? ps.dataset.playsong : line.closest(".ly").dataset.ly, song = songs.find((x) => x.id === id);
+      if (!song || !song.audio) return;
+      const cur = queue[qi];
+      if (ps && cur && cur.id === id) return toggle();
+      if (!cur || cur.id !== id) { const r = releaseOf(song); queue = r.tracks.filter((x) => x.audio); playAt(queue.indexOf(song)); }
+      if (line) { const go = () => { audio.currentTime = +line.dataset.t; audio.play(); }; audio.readyState >= 1 ? go() : audio.addEventListener("loadedmetadata", go, { once: true }); }
+      return;
+    }
     if (play) { e.stopPropagation(); const r = byKey[play.dataset.play]; return r && isPlayingRel(r) ? audio.pause() : r && queue[qi] && r.tracks.includes(queue[qi]) && audio?.paused ? audio.play() : playRelease(play.dataset.play); }
     if (v) { e.stopPropagation(); return openVideo(videoOfSong(v.dataset.video)); }
     if (vc) return openVideo(videos.find((x) => x.id === vc.dataset.vid));

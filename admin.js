@@ -91,7 +91,6 @@
         { k: "cover", label: "Cover art (square). Songs in an album use the album cover if left empty.", type: "upload", accept: "image/*" },
         { row: [{ k: "color", label: "Theme colour (site colour for this release)", type: "color" }, { k: "accent", label: "Light colour", type: "color" }] },
         { k: "description", label: "Description (optional)", type: "textarea", rows: 2 },
-        { k: "lyrics", label: "Lyrics (optional)", type: "textarea", rows: 6 },
         { k: "video", label: "Lyric / music video (MP4, optional)", type: "upload", accept: "video/*" },
         { row: [{ k: "videoLabel", label: "Video button text", placeholder: "Lyric video" }, { k: "youtube", label: "…or YouTube link", placeholder: "https://youtu.be/…" }] }
       ]
@@ -209,7 +208,64 @@
     sel.onchange = () => set("featured", sel.value);
   }
 
+  /* ---------- Lyrics tab ---------- */
+  const TS = /^\s*\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/;
+  const isSynced = (t) => { const L = String(t || "").split("\n").filter((l) => l.trim()); return L.length > 0 && L.filter((l) => TS.test(l)).length >= L.length * 0.6; };
+  const stripTimes = (t) => String(t || "").split("\n").map((l) => l.replace(/^\s*\[\d+:\d+(?:\.\d+)?\]\s?/, "")).join("\n");
+  function renderLyricsTab() {
+    const box = $("#lyrics-list");
+    box.innerHTML = data.songs.length ? data.songs.map((s, i) => `
+      <div class="item ly-card">
+        <div class="item-head"><span class="num">${esc(s.title || "Untitled song")}<small>${s.audio ? "" : "no audio yet"}</small></span>
+          <span class="badge ${isSynced(s.lyrics) ? "on" : ""}">${isSynced(s.lyrics) ? "Synced" : s.lyrics ? "Plain" : "Empty"}</span></div>
+        <textarea rows="12" data-bind="songs.${i}.lyrics" placeholder="Paste lyrics here…"></textarea>
+        <div class="row">
+          <button class="ghost small" data-sync="${i}" ${s.audio ? "" : "disabled"}>♪ Sync with audio</button>
+          <button class="ghost small" data-strip="${i}">Remove timings</button>
+        </div>
+      </div>`).join("") : `<p class="empty">Add a song first.</p>`;
+    bindInputs(box, renderLyricsTab);
+  }
+  document.addEventListener("click", (e) => {
+    const st = e.target.closest("[data-strip]"), sy = e.target.closest("[data-sync]");
+    if (st) { const i = +st.dataset.strip; set(`songs.${i}.lyrics`, stripTimes(data.songs[i].lyrics)); renderLyricsTab(); }
+    if (sy && !sy.disabled) openSync(+sy.dataset.sync);
+  });
+
+  /* ---------- Sync tool ---------- */
+  const syA = $("#sy-audio"); let sy = { i: -1, lines: [], cur: 0 };
+  const fmtTs = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${(t % 60).toFixed(2).padStart(5, "0")}`;
+  function openSync(i) {
+    const s = data.songs[i];
+    if (!String(s.lyrics || "").trim()) return alert("Paste the lyrics first.");
+    const src = String(s.audio || "").startsWith("pending:") ? previews.get(s.audio.slice(8)) : s.audio;
+    syA.src = src;
+    const lines = stripTimes(s.lyrics).split("\n").map((l) => l.trim()).filter(Boolean);
+    const old = String(s.lyrics).split("\n").map((l) => l.match(TS)).filter(Boolean);
+    sy = { i, lines: lines.map((text, k) => ({ text, t: old[k] && old[k][3].trim() === text ? +old[k][1] * 60 + +old[k][2] : null })), cur: 0 };
+    sy.cur = Math.max(0, sy.lines.findIndex((l) => l.t === null)); if (sy.lines.every((l) => l.t !== null)) sy.cur = sy.lines.length;
+    $("#sy-title").textContent = "Sync — " + (s.title || "song");
+    $("#sy").hidden = false; drawSync();
+  }
+  function drawSync() {
+    $("#sy-lines").innerHTML = sy.lines.map((l, k) => `<li class="${k === sy.cur ? "cur" : l.t !== null ? "done" : ""}" data-k="${k}"><span class="ts">${l.t !== null ? fmtTs(l.t) : ""}</span><span>${esc(l.text)}</span></li>`).join("");
+    $("#sy-status").textContent = `${sy.lines.filter((l) => l.t !== null).length} / ${sy.lines.length} timed`;
+    $("#sy-lines .cur")?.scrollIntoView({ block: "center" });
+  }
+  function stamp() { if (sy.cur >= sy.lines.length) return; sy.lines[sy.cur].t = Math.max(0, syA.currentTime - 0.2); sy.cur++; drawSync(); }
+  $("#sy-stamp").onclick = stamp;
+  $("#sy-undo").onclick = () => { if (sy.cur > 0) { sy.cur--; sy.lines[sy.cur].t = null; syA.currentTime = Math.max(0, (sy.lines[sy.cur - 1]?.t ?? 0)); drawSync(); } };
+  $("#sy-restart").onclick = () => { sy.lines.forEach((l) => (l.t = null)); sy.cur = 0; syA.currentTime = 0; drawSync(); };
+  $("#sy-lines").onclick = (e) => { const li = e.target.closest("li"); if (!li) return; sy.cur = +li.dataset.k; const t = sy.lines[sy.cur].t; if (t !== null) syA.currentTime = t; drawSync(); };
+  addEventListener("keydown", (e) => { if ($("#sy").hidden || e.code !== "Space" || e.target.tagName === "TEXTAREA") return; e.preventDefault(); stamp(); });
+  $("#sy-close").onclick = () => { syA.pause(); $("#sy").hidden = true; };
+  $("#sy-save").onclick = () => {
+    const text = sy.lines.map((l) => (l.t !== null ? `[${fmtTs(l.t)}] ${l.text}` : l.text)).join("\n");
+    set(`songs.${sy.i}.lyrics`, text); syA.pause(); $("#sy").hidden = true; renderLyricsTab();
+  };
+
   function render() {
+    renderLyricsTab();
     bindInputs($('.tab[data-tab="settings"]'));
     Object.keys(LISTS).forEach(renderList);
     renderFeatured();

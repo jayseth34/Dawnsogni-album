@@ -43,6 +43,7 @@
     <div id="editor" hidden>
       <nav class="tabs" id="tabs">
         <button data-tab="songs" class="on">Songs</button>
+        <button data-tab="lyrics">Lyrics</button>
         <button data-tab="albums">Albums</button>
         <button data-tab="videos">Videos</button>
         <button data-tab="events">Events</button>
@@ -54,6 +55,16 @@
           <div class="box-head"><h2>Songs</h2><button class="btn small" data-add="songs">+ Add song</button></div>
           <p class="hint">Pick an album for each song, or leave it as a single. Songs inside an album play in the order shown here; use ↑ ↓ to reorder.</p>
           <div class="list" id="list-songs"></div>
+        </div>
+      </section>
+
+      <section class="tab" data-tab="lyrics" hidden>
+        <div class="box">
+          <h2>Lyrics</h2>
+          <p class="hint">Paste the lyrics for each song, one line per line. Press <b>Sync with audio</b> to time them: play the song and tap
+            <b>Stamp</b> (or the space bar) as each line starts — the site then highlights and scrolls the lyrics live, like Spotify.
+            You can also type timings yourself as <code>[01:23.40] line</code>.</p>
+          <div class="list" id="lyrics-list"></div>
         </div>
       </section>
 
@@ -108,6 +119,22 @@
       <ol id="log"></ol>
     </section>
   </main>
+
+  <!-- Lyrics sync tool -->
+  <div class="cm" id="sy" hidden>
+    <div class="cm-card sy-card">
+      <div class="box-head"><h2 id="sy-title">Sync lyrics</h2><button class="ghost small" id="sy-close">Close</button></div>
+      <audio id="sy-audio" controls preload="auto"></audio>
+      <div class="row">
+        <button class="btn" id="sy-stamp">Stamp line (Space)</button>
+        <button class="ghost" id="sy-undo">Undo</button>
+        <button class="ghost" id="sy-restart">Start over</button>
+        <span class="status" id="sy-status"></span>
+      </div>
+      <ol class="sy-lines" id="sy-lines"></ol>
+      <div class="row"><button class="btn" id="sy-save">Save timings</button><span class="hint">Lines you don't reach stay untimed and won't show in synced mode.</span></div>
+    </div>
+  </div>
 
   <!-- Cover maker -->
   <div class="cm" id="cm" hidden>

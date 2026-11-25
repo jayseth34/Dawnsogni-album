@@ -68,3 +68,15 @@ code { background: #1a1a1c; padding: 1px 6px; border-radius: 4px; }
 input[type=color] { height: 44px; padding: 4px; cursor: pointer; }
 .swatch-row { display: flex; gap: 8px; align-items: flex-end; }
 @media (max-width: 760px) { .cm-card { grid-template-columns: 1fr; } }
+
+.sy-card { grid-template-columns: 1fr; max-width: 760px; display: flex; flex-direction: column; gap: 14px; }
+.sy-card audio { width: 100%; }
+.sy-lines { list-style: none; max-height: 52vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.sy-lines li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; padding: 7px 8px; border-radius: 6px; color: var(--dim); font-size: 15px; }
+.sy-lines li .ts { font-variant-numeric: tabular-nums; color: #9be7ac; font-size: 13px; }
+.sy-lines li.cur { background: #fff; color: #000; }
+.sy-lines li.cur .ts { color: #0a7a2a; }
+.sy-lines li.done { color: var(--fg); }
+.ly-card textarea { font-size: 15px; line-height: 1.6; }
+.badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--dim); font-weight: 500; }
+.badge.on { background: rgba(155,231,172,0.15); color: #9be7ac; }
