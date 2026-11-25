@@ -8,7 +8,8 @@
 
   const EMPTY = () => ({
     brand: { instagram: "", spotify: "", appleMusic: "", youtube: "", shopUrl: "https://jayseth34.github.io/DawnSogniWeb/" },
-    featured: "", albums: [], songs: [], videos: [], events: []
+    featured: "", albums: [], songs: [], videos: [], events: [],
+    artist: { name: "", realName: "", tagline: "", bio: "", photo: "" }
   });
 
   /* ---------- Config ---------- */
@@ -58,7 +59,7 @@
       try {
         const f = await gh(`/contents/content.json?ref=${encodeURIComponent(cfg.branch)}`);
         const raw = JSON.parse(unb64utf8(f.content));
-        data = Object.assign(EMPTY(), raw); data.brand = Object.assign(EMPTY().brand, raw.brand || {});
+        data = Object.assign(EMPTY(), raw); data.brand = Object.assign(EMPTY().brand, raw.brand || {}); data.artist = Object.assign(EMPTY().artist, raw.artist || {});
         ["albums", "songs", "videos", "events"].forEach((k) => Array.isArray(data[k]) || (data[k] = []));
       } catch (e) { if (e.status !== 404) throw e; data = EMPTY(); }
       dirty = false; $("#publish").disabled = true; $("#editor").hidden = false;
@@ -209,7 +210,7 @@
   async function handleFile(path, f) {
     const m = path.match(/^songs\.(\d+)\.(audio|video)$/), song = m && data.songs[+m[1]];
     try {
-      if (/\.(cover|poster|image)$/.test(path)) {
+      if (/\.(cover|poster|image|photo)$/.test(path)) {
         setBusy(path, "Optimising image…");
         addPending(path, await DSMedia.image(f));
       } else if (DSMedia.isVideo(f)) {
@@ -313,6 +314,8 @@
 
   function render() {
     renderLyricsTab();
+    bindInputs($('.tab[data-tab="artist"]'));
+    $$('.tab[data-tab="artist"] .upload-row').forEach(renderUpload);
     bindInputs($('.tab[data-tab="settings"]'));
     Object.keys(LISTS).forEach(renderList);
     renderFeatured();

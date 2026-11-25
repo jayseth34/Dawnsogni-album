@@ -42,6 +42,7 @@
 
     <div id="editor" hidden>
       <nav class="tabs" id="tabs">
+        <button data-tab="artist">Artist</button>
         <button data-tab="songs" class="on">Songs</button>
         <button data-tab="lyrics">Lyrics</button>
         <button data-tab="albums">Albums</button>
@@ -49,6 +50,20 @@
         <button data-tab="events">Events</button>
         <button data-tab="settings">Settings</button>
       </nav>
+
+      <section class="tab" data-tab="artist" hidden>
+        <div class="box">
+          <h2>Artist profile</h2>
+          <p class="hint">This is the top of your homepage — like an artist page on Spotify.</p>
+          <div class="grid3">
+            <label>Artist name<input data-bind="artist.name" placeholder="Dawn Sogni" /></label>
+            <label>Real name (optional)<input data-bind="artist.realName" /></label>
+            <label>Tagline<input data-bind="artist.tagline" placeholder="Rapper · Songwriter" /></label>
+          </div>
+          <label>Bio (shows in the About card)<textarea data-bind="artist.bio" rows="5" placeholder="Who you are, where you're from, what your music is about…"></textarea></label>
+          <div class="upload-row" data-upload="artist.photo" data-accept="image/*" data-label="Artist photo (banner + About card)"></div>
+        </div>
+      </section>
 
       <section class="tab" data-tab="songs">
         <div class="box">

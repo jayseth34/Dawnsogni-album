@@ -26,5 +26,13 @@
     }
   ],
   "videos": [],
-  "events": []
+  "events": [],
+  "artist": {
+    "name": "Dawn Sogni",
+    "realName": "Jay Seth",
+    "tagline": "Rapper · Songwriter",
+    "bio": "",
+    "photo": "media/artist-poster.jpg",
+    "photos": []
+  }
 }

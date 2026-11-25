@@ -39,6 +39,8 @@
   }, true);
   const brand = C.brand || {};
   const albums = C.albums || [];
+  const SHOW_VIDEOS = false; // lyric/music videos hidden for now — songs + lyrics only
+  if (!SHOW_VIDEOS) { (C.songs || []).forEach((s) => { s.video = ""; s.youtube = ""; }); C.videos = []; }
   const songs = (C.songs || []).filter((s) => s.audio || s.video || s.youtube || (s.title && s.title.trim()));
   songs.forEach((s) => { if (!s.lyrics && (s.description || "").split("\n").length > 8) { s.lyrics = s.description; s.description = ""; } });
   const albumById = Object.fromEntries(albums.map((a) => [a.id, a]));
@@ -96,6 +98,25 @@
     return (loud.length >= 3 ? loud : uniq).slice(0, 8).map((l) => l.toUpperCase());
   }
   const withLyrics = () => songs.filter((s) => s.lyrics && s.lyrics.trim());
+
+  /* ---------- Zine helpers ---------- */
+  function seeded(str) { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296); }
+  // ransom-note headline: every letter cut from a different "magazine"
+  function ransom(text) {
+    const rnd = seeded(text), fonts = ["g", "a", "s", "m", "i"], looks = ["w", "b", "n", "r", "w", "b", "t"];
+    return String(text).split(/\s+/).filter(Boolean).map((word) => `<span class="rs-word">${[...word].map((ch) => {
+      const f = fonts[Math.floor(rnd() * fonts.length)], l = looks[Math.floor(rnd() * looks.length)];
+      const rot = (rnd() * 12 - 6).toFixed(1), dy = (rnd() * 10 - 5).toFixed(0), up = rnd() > 0.45;
+      return `<span class="rs f-${f} l-${l}" style="transform:rotate(${rot}deg) translateY(${dy}%)">${esc(up ? ch.toUpperCase() : ch.toLowerCase())}</span>`;
+    }).join("")}</span>`).join(`<span class="rs-gap"> </span>`);
+  }
+  // torn paper strip between sections
+  function tear(seed, flip) {
+    const rnd = seeded("tear" + seed); let top = "M0,30 ", bot = "";
+    for (let x = 0; x <= 100; x += 1.5) top += `L${x},${(10 + rnd() * 18).toFixed(1)} `;
+    for (let x = 100; x >= 0; x -= 1.5) bot += `L${x},${(46 + rnd() * 16).toFixed(1)} `;
+    return `<div class="tear ${flip ? "flip" : ""}" aria-hidden="true"><svg viewBox="0 0 100 70" preserveAspectRatio="none"><path d="${top}${bot}Z" /></svg></div>`;
+  }
 
   /* ---------- Durations ---------- */
   const dur = {};
@@ -180,62 +201,59 @@
   const VIEWS = {
     home() {
       theme(featured);
-      if (!featured && !videos.length) return `<div class="wash"></div><div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div><div class="empty"><h1>SOON</h1>New music on the way.</div>`;
-      const f = featured, fv = f && f.single && (f.tracks[0].video || f.tracks[0].youtube) ? f.tracks[0] : null;
-      const albumsL = releases.filter((r) => !r.single), singlesL = releases.filter((r) => r.single);
-      const ft = f ? f.tracks[0] : null;
-      const heroVid = ft && ft.video ? ft.video : "";
-      const heroLyrics = f ? f.tracks.map((t) => t.lyrics).find(Boolean) : "";
-      const hk = hooks(heroLyrics);
-      const notes = f && (f.description || (f.single && ft.description)) || "";
-      return `<div class="wash"></div>
-        ${f ? `<section class="hero" id="hero">
-          <div class="hero-media" id="hero-media">${heroVid ? `<video src="${esc(heroVid)}" ${f.cover ? `poster="${esc(f.cover)}"` : ""} muted autoplay loop playsinline preload="auto"></video>` : f.cover ? `<img src="${esc(f.cover)}" alt="" />` : ""}</div>
-          <div class="hero-shade"></div>
-          <div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div>
-          <div class="hero-content" id="hero-content">
-            <p class="hero-kicker">${f === releases[0] ? "Latest " : ""}${esc(f.type)}${f.date ? " &nbsp;·&nbsp; " + year(f.date) : ""}</p>
-            <h1 class="hero-title">${esc(f.title)}</h1>
-            <div class="hero-actions">
-              ${f.tracks.some((t) => t.audio) ? `<button class="hero-play" data-play="${f.key}">${P}<span>Play</span></button>` : ""}
-              ${fv ? `<button class="hero-ghost" data-video="${esc(fv.id)}">${VID}${esc(fv.videoLabel || "Watch video")}</button>` : ""}
-              ${heroLyrics && ft ? `<a class="hero-ghost" href="#/lyrics/${encodeURIComponent(ft.id)}">Lyrics</a>` : ""}
+      const A = C.artist || {};
+      const name = A.name || "Dawn Sogni";
+      const photo = A.photo || (featured && featured.cover) || "";
+      const popular = [...songs].filter((t) => t.audio).sort((x, y) => String(y.releaseDate).localeCompare(String(x.releaseDate))).slice(0, 5);
+      const lyr = songs.find((t) => t.lyrics);
+      return `
+        <section class="ar-banner">
+          ${photo ? `<img class="ar-img" src="${esc(photo)}" alt="${esc(name)}" />` : ""}
+          <div class="ar-shade"></div>
+          <div class="ar-text">
+            <p class="ar-badge"><svg viewBox="0 0 24 24"><path d="M12 1 9.4 3.6 5.7 3.3l-.3 3.7L2.2 9l1.8 3.3L2.2 15.6l3.2 1.9.3 3.7 3.7-.3L12 23l2.6-2.1 3.7.3.3-3.7 3.2-1.9-1.8-3.3L21.8 9l-3.2-2-.3-3.7-3.7.3z"/><path fill="#000" d="m10.6 16.2-3.9-3.9 1.4-1.4 2.5 2.5 5.3-5.3 1.4 1.4z"/></svg>Artist</p>
+            <h1 class="ransom" aria-label="${esc(name)}">${ransom(name)}</h1>
+            ${A.realName || A.tagline ? `<p class="ar-tag">${esc([A.realName, A.tagline].filter(Boolean).join("  ·  "))}</p>` : ""}
+          </div>
+          ${tear(1)}
+        </section>
+        <div class="actions ar-actions">
+          ${popular.length ? `<button class="big-play" data-playsong="${esc(popular[0].id)}" aria-label="Play">${P}</button>` : ""}
+          ${brand.instagram ? `<a class="txt-act" href="${esc(brand.instagram)}" target="_blank" rel="noopener">Follow</a>` : ""}
+        </div>
+
+        ${popular.length ? `<section class="shelf"><div class="shelf-head"><h2>Popular</h2></div>
+          <div class="tl pop">${popular.map((t, i) => { const r = releaseOf(t); return `
+            <div class="tl-row" data-song="${esc(t.id)}" data-rel="${r.key}" data-i="${r.tracks.indexOf(t)}">
+              <span class="n"><span class="num">${i + 1}</span><span class="pi">${P}</span></span>
+              <div class="tt">${coverOf(t) ? `<img src="${esc(coverOf(t))}" alt="" />` : ""}<div style="min-width:0"><div class="name">${esc(t.title)}</div><div class="sub">${esc(r.single ? "Single" : r.title)}</div></div></div>
+              <span>${t.lyrics ? `<a class="vtag" href="#/lyrics/${encodeURIComponent(t.id)}">Lyrics</a>` : ""}</span>
+              <span class="d" data-dur="${esc(t.id)}">${fmt(dur[t.id])}</span>
+            </div>`; }).join("")}</div></section>` : `<p class="empty">New music on the way.</p>`}
+
+        ${releases.length ? `<section class="shelf"><div class="shelf-head"><h2>Discography</h2></div>
+          <div class="vinyls">${releases.map((r) => `
+            <div class="vinyl-card" data-go="#/r/${r.key}">
+              <div class="vinyl-wrap"><div class="record"><span style="${r.cover ? `background-image:url('${esc(r.cover)}')` : ""}"></span></div><div class="sleeve">${art(r.cover, r.title)}</div>
+                ${r.tracks.some((t) => t.audio) ? `<button class="v-play" data-play="${r.key}" aria-label="Play">${P}</button>` : ""}</div>
+              <p class="v-title">${esc(r.title)}</p><p class="v-sub">${r.date ? year(r.date) + " · " : ""}${esc(r.type)}</p>
+            </div>`).join("")}</div></section>` : ""}
+
+        ${lyr ? `<section class="shelf"><div class="shelf-head"><h2>Lyrics</h2><a href="#/lyrics">Show all</a></div>
+          <a class="lyr-card" href="#/lyrics/${encodeURIComponent(lyr.id)}">
+            <p class="lyr-song">${esc(lyr.title)}</p>
+            ${parseLyrics(lyr.lyrics).lines.map((l) => l.text.trim()).filter((t) => t && !/^\[.*\]$/.test(t)).slice(0, 6).map((t) => `<p>${esc(t)}</p>`).join("")}
+            <span class="lyr-more">Read all →</span>
+          </a></section>` : ""}
+
+        ${photo ? `<section class="shelf"><div class="shelf-head"><h2>About</h2></div>
+          <div class="about-card" style="background-image:url('${esc(photo)}')">
+            <div class="about-in">
+              <p class="ransom small" aria-label="${esc(name)}">${ransom(name)}</p>
+              ${A.tagline ? `<p class="about-tag">${esc(A.tagline)}</p>` : ""}
+              ${A.bio ? `<p class="about-bio">${esc(A.bio)}</p>` : ""}
             </div>
-          </div>
-          <div class="scroll-cue"><span></span>Scroll</div>
-        </section>` : ""}
-
-        ${hk.length ? `<section class="marquee" aria-hidden="true">
-          <div class="mq-row"><div class="mq-track">${[...hk, ...hk].map((h, i) => `<span class="${i % 2 ? "o" : ""}">${esc(h)}</span><i>†</i>`).join("")}</div></div>
-          <div class="mq-row rev"><div class="mq-track">${[...hk.slice().reverse(), ...hk.slice().reverse()].map((h, i) => `<span class="${i % 2 ? "" : "o"}">${esc(h)}</span><i>†</i>`).join("")}</div></div>
-        </section>` : ""}
-
-        ${f ? `<section class="record reveal">
-          <div class="tilt" id="tilt"><div class="tilt-in">${art(f.cover, f.title)}<div class="glare"></div></div></div>
-          <div class="record-info">
-            <p class="kicker">The ${esc(f.type.toLowerCase())}</p>
-            <h2 class="record-title">${esc(f.title)}</h2>
-            <div class="rhead-meta">${f.date ? `<span>${new Date(f.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>` : ""}<span>${f.tracks.length} ${f.tracks.length === 1 ? "song" : "songs"}</span><span data-total="${f.key}"></span></div>
-            ${notes ? `<p class="notes">${esc(notes)}</p>` : ""}
-            <ol class="mini-tl">${f.tracks.map((t, i) => `<li class="tl-row" data-song="${esc(t.id)}" data-rel="${f.key}" data-i="${i}"><span class="n"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="pi">${P}</span></span><span class="name">${esc(t.title)}</span><span class="d" data-dur="${esc(t.id)}">${fmt(dur[t.id])}</span></li>`).join("")}</ol>
-            <a class="txt-act" href="#/r/${f.key}">Open ${esc(f.type.toLowerCase())}</a>
-          </div>
-        </section>` : ""}
-
-        ${fv && fv.video ? `<section class="cinema reveal" data-video="${esc(fv.id)}">
-          <video class="cinema-bg" src="${esc(fv.video)}" muted loop playsinline preload="none"></video>
-          <div class="cinema-frame"><video src="${esc(fv.video)}" ${f.cover ? `poster="${esc(f.cover)}"` : ""} muted loop playsinline preload="none"></video><span class="cinema-play">${P}</span></div>
-          <div class="cinema-cap"><p class="kicker">${esc(fv.videoLabel || "Video")}</p><h2>${esc(fv.title)}</h2><p class="hint-s">Tap to watch with sound</p></div>
-        </section>` : ""}
-
-        ${releases.length > 1 ? shelf("Albums", albumsL.map(card).join("")) + shelf(albumsL.length ? "Singles" : "Discography", singlesL.map(card).join("")) : ""}
-        ${videos.filter((v) => v !== videoOfSong(fv && fv.id)).length ? shelf("Videos", videos.slice(0, 8).map(vcard).join(""), videos.length > 8 ? "#/videos" : "") : ""}
-        ${events.length ? `<section class="shelf"><div class="shelf-head"><h2>Events</h2></div><ul class="events">${events.map((e) => {
-          const d = e.date ? new Date(e.date + "T00:00:00") : null;
-          return `<li><div class="ev-date">${d ? `<b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB", { month: "short" })}</span>` : "<b>TBA</b>"}</div>
-            <div><div class="ev-title">${esc(e.title)}</div><div class="ev-place">${esc(e.place)}</div></div>
-            ${e.link ? `<a class="txt-act" href="${esc(e.link)}" target="_blank" rel="noopener">${esc(e.cta || "Tickets")}</a>` : "<span></span>"}</li>`;
-        }).join("")}</ul></section>` : ""}
+          </div></section>` : ""}
         ${foot()}`;
     },
 
@@ -320,7 +338,7 @@
     const h = location.hash || "#/";
     let html, name = "home", title = "";
     if (h.startsWith("#/r/")) { const k = decodeURIComponent(h.slice(4)); html = VIEWS.release(k); name = "release"; title = byKey[k]?.title || ""; }
-    else if (h === "#/videos") { html = VIEWS.videos(); name = "videos"; title = "Videos"; }
+    else if (h === "#/videos" && SHOW_VIDEOS) { html = VIEWS.videos(); name = "videos"; title = "Videos"; }
     else if (h === "#/lyrics") { html = VIEWS.lyricsIndex(); name = "lyrics"; title = "Lyrics"; }
     else if (h.startsWith("#/lyrics/")) { const id = decodeURIComponent(h.slice(9)); html = VIEWS.lyrics(id); name = "lyrics"; title = songs.find((x) => x.id === id)?.title || "Lyrics"; }
     else if (h === "#/library") { html = VIEWS.library(); name = "library"; title = "Your Library"; }
@@ -329,6 +347,8 @@
     $("#tb-title").textContent = title;
     $$("[data-nav]").forEach((a) => a.classList.toggle("on", a.dataset.nav === name));
     main.scrollTo(0, 0); scrollTo(0, 0);
+    $$('[data-nav="videos"]').forEach((a) => (a.hidden = !SHOW_VIDEOS));
+    $("#b-video").hidden = !SHOW_VIDEOS;
     renderLibrary(); totals(); mark(); fitGiant(); lastLine = -2; syncLyrics(true); enhance();
     if (document.fonts) document.fonts.ready.then(fitGiant);
     onScroll();
