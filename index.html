@@ -1,33 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-beasties-container>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="utf-8">
   <title>Dawn Sogni</title>
-  <meta name="description" content="Music and lyrics." />
-  <meta name="theme-color" content="#3a0710" />
-  <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
-  <link rel="stylesheet" href="styles.css?v=1795633020" />
-</head>
+  <base href="./">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Dawn Sogni — official music. Albums, releases, lyrics.">
+  <meta name="theme-color" content="#080808">
+  <link rel="icon" type="image/png" href="assets/ds-logo-sm.png">
+  <link rel="preload" href="assets/fonts/outfit-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/gothic.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+@font-face { font-family: "Outfit"; src: url("assets/fonts/outfit-300.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Outfit"; src: url("assets/fonts/outfit-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Outfit"; src: url("assets/fonts/outfit-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Outfit"; src: url("assets/fonts/outfit-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Outfit"; src: url("assets/fonts/outfit-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "DS Gothic"; src: url("assets/fonts/gothic.woff2") format("woff2"); font-display: swap; }
+  </style>
+<style>:root{--black:#080808;--char:#151515;--char-2:#1d1d1d;--char-3:#262626;--red:#B32626;--red-rgb:179, 38, 38;--burg:#54151D;--text:#F2EFEB;--muted:#929292;--line:rgba(242, 239, 235, .08);--gothic:"DS Gothic", "UnifrakturMaguntia", "Old English Text MT", serif;--sans:"Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;--ease:cubic-bezier(.2, .8, .2, 1);--r:14px}*{box-sizing:border-box;margin:0;padding:0}html{-webkit-text-size-adjust:100%}body{background:var(--black);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 45% at 85% -5%,rgba(var(--red-rgb),.22),transparent 70%),radial-gradient(50% 40% at 0% 30%,rgba(84,21,29,.35),transparent 70%),var(--black)}body:after{content:"";position:fixed;inset:0;z-index:200;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}@media(max-width:760px){body{font-size:15px}}</style><link rel="stylesheet" href="styles-AHMBQHDX.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-AHMBQHDX.css"></noscript></head>
 <body>
-  <!-- ambient red light -->
-  <div class="bg" aria-hidden="true">
-    <div class="bg-cover" id="bg-cover"></div>
-    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span>
-  </div>
-
-  <div class="app">
-    <main id="view"></main>
-  </div>
-
-  <!-- mini player -->
-  <div class="mini glass" id="mini" hidden>
-    <div class="mini-fill" id="mini-fill"></div>
-    <img class="mini-cover" id="mini-cover" alt="" />
-    <div class="mini-meta" id="mini-meta"><div class="mini-title" id="mini-title"></div><div class="mini-sub" id="mini-sub">Now playing</div></div>
-    <button class="circle-btn" id="mini-play" aria-label="Play"><svg viewBox="0 0 24 24"><path class="ico-pp" d="M8 5v14l11-7z"/></svg></button>
-  </div>
-
-  <script src="app.js?v=1795633020"></script>
-</body>
+  <app-root></app-root>
+<link rel="modulepreload" href="chunk-PS6USTGK.js"><script src="main-ZVVO3AFC.js" type="module"></script></body>
 </html>
