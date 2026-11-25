@@ -1,6 +1,6 @@
 {
   "brand": {
-    "instagram": "https://www.instagram.com/dawn.sogni?cnvx=eHBxMDUyMWF5dXBo",
+    "instagram": "https://www.instagram.com/dawn.sogni",
     "spotify": "",
     "appleMusic": "",
     "youtube": "",
@@ -9,6 +9,21 @@
   "featured": "",
   "albums": [],
   "songs": [
+    {
+      "id": "song-epq6",
+      "title": "",
+      "album": "",
+      "releaseDate": "2026-11-25",
+      "description": "",
+      "lyrics": "",
+      "cover": "",
+      "audio": "",
+      "video": "",
+      "videoLabel": "Lyric video",
+      "youtube": "",
+      "color": "",
+      "accent": ""
+    },
     {
       "id": "song-o5vr",
       "title": "We don’t blend",
@@ -21,8 +36,8 @@
       "video": "media/20261125182739-dawn-sogni-lyrics-video.mp4",
       "videoLabel": "Lyric video",
       "youtube": "",
-      "color": "#fcfc00",
-      "accent": ""
+      "color": "#000000",
+      "accent": "#000000"
     }
   ],
   "videos": [],
