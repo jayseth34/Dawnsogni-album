@@ -39,7 +39,8 @@
   }, true);
   const brand = C.brand || {};
   const albums = C.albums || [];
-  const songs = (C.songs || []).filter((s) => s.audio || s.video || s.youtube || s.title);
+  const songs = (C.songs || []).filter((s) => s.audio || s.video || s.youtube || (s.title && s.title.trim()));
+  songs.forEach((s) => { if (!s.lyrics && (s.description || "").split("\n").length > 8) { s.lyrics = s.description; s.description = ""; } });
   const albumById = Object.fromEntries(albums.map((a) => [a.id, a]));
   $$(".shop-link").forEach((a) => (brand.shopUrl ? (a.href = brand.shopUrl) : a.remove()));
 
@@ -84,6 +85,16 @@
     return `<div class="ly ${L.synced ? "synced" : ""}" data-ly="${esc(song.id)}">${L.lines.map((l, i) =>
       `<p class="ly-line" data-i="${i}" ${l.t !== null ? `data-t="${l.t}"` : ""}>${esc(l.text) || "&nbsp;"}</p>`).join("")}</div>`;
   };
+  // pull the punchiest lines (shouted hooks first) for the homepage marquee
+  function hooks(text) {
+    if (!text) return [];
+    const lines = parseLyrics(text).lines.map((l) => l.text.replace(/\[[^\]]*\]/g, "").replace(/\s+/g, " ").trim())
+      .filter((l) => l.length >= 8 && l.length <= 44);
+    const caps = (l) => { const letters = l.replace(/[^A-Za-z]/g, ""); return letters && letters.replace(/[^A-Z]/g, "").length / letters.length; };
+    const uniq = [...new Set(lines.map((l) => l.replace(/[.,!?…]+$/, "")))];
+    const loud = uniq.filter((l) => caps(l) > 0.7);
+    return (loud.length >= 3 ? loud : uniq).slice(0, 8).map((l) => l.toUpperCase());
+  }
   const withLyrics = () => songs.filter((s) => s.lyrics && s.lyrics.trim());
 
   /* ---------- Durations ---------- */
@@ -172,25 +183,53 @@
       if (!featured && !videos.length) return `<div class="wash"></div><div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div><div class="empty"><h1>SOON</h1>New music on the way.</div>`;
       const f = featured, fv = f && f.single && (f.tracks[0].video || f.tracks[0].youtube) ? f.tracks[0] : null;
       const albumsL = releases.filter((r) => !r.single), singlesL = releases.filter((r) => r.single);
+      const ft = f ? f.tracks[0] : null;
+      const heroVid = ft && ft.video ? ft.video : "";
+      const heroLyrics = f ? f.tracks.map((t) => t.lyrics).find(Boolean) : "";
+      const hk = hooks(heroLyrics);
+      const notes = f && (f.description || (f.single && ft.description)) || "";
       return `<div class="wash"></div>
-        <div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div>
-        ${f ? `<section class="banner">
-          <div class="giant" aria-hidden="true">${esc(f.title)}</div>
-          ${f.cover ? `<img class="banner-art" src="${esc(f.cover)}" alt="" data-go="#/r/${f.key}" />` : `<div class="banner-art" data-go="#/r/${f.key}">${art("", f.title)}</div>`}
-          <div class="banner-info">
-            <p class="kicker">${f === releases[0] ? "Latest " : ""}${esc(f.type)}</p>
-            <h1>${esc(f.title)}</h1>
-            <div class="rhead-meta">${f.date ? `<span>${year(f.date)}</span>` : ""}<span>${f.tracks.length} ${f.tracks.length === 1 ? "song" : "songs"}</span><span data-total="${f.key}"></span></div>
-            <div class="actions">
-              ${f.tracks.some((t) => t.audio) ? `<button class="big-play" data-play="${f.key}" aria-label="Play">${P}</button>` : ""}
-              ${fv ? `<button class="txt-act" data-video="${esc(fv.id)}">${VID}${esc(fv.videoLabel || "Watch video")}</button>` : ""}
-              <a class="txt-act" href="#/r/${f.key}">Open</a>
+        ${f ? `<section class="hero" id="hero">
+          <div class="hero-media" id="hero-media">${heroVid ? `<video src="${esc(heroVid)}" ${f.cover ? `poster="${esc(f.cover)}"` : ""} muted autoplay loop playsinline preload="auto"></video>` : f.cover ? `<img src="${esc(f.cover)}" alt="" />` : ""}</div>
+          <div class="hero-shade"></div>
+          <div class="mobile-brand"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></div>
+          <div class="hero-content" id="hero-content">
+            <p class="hero-kicker">${f === releases[0] ? "Latest " : ""}${esc(f.type)}${f.date ? " &nbsp;·&nbsp; " + year(f.date) : ""}</p>
+            <h1 class="hero-title">${esc(f.title)}</h1>
+            <div class="hero-actions">
+              ${f.tracks.some((t) => t.audio) ? `<button class="hero-play" data-play="${f.key}">${P}<span>Play</span></button>` : ""}
+              ${fv ? `<button class="hero-ghost" data-video="${esc(fv.id)}">${VID}${esc(fv.videoLabel || "Watch video")}</button>` : ""}
+              ${heroLyrics && ft ? `<a class="hero-ghost" href="#/lyrics/${encodeURIComponent(ft.id)}">Lyrics</a>` : ""}
             </div>
           </div>
+          <div class="scroll-cue"><span></span>Scroll</div>
         </section>` : ""}
-        ${shelf("Albums", albumsL.map(card).join(""))}
-        ${shelf(albumsL.length ? "Singles" : "Releases", singlesL.map(card).join(""))}
-        ${shelf("Videos", videos.slice(0, 8).map(vcard).join(""), videos.length > 8 ? "#/videos" : "")}
+
+        ${hk.length ? `<section class="marquee" aria-hidden="true">
+          <div class="mq-row"><div class="mq-track">${[...hk, ...hk].map((h, i) => `<span class="${i % 2 ? "o" : ""}">${esc(h)}</span><i>†</i>`).join("")}</div></div>
+          <div class="mq-row rev"><div class="mq-track">${[...hk.slice().reverse(), ...hk.slice().reverse()].map((h, i) => `<span class="${i % 2 ? "" : "o"}">${esc(h)}</span><i>†</i>`).join("")}</div></div>
+        </section>` : ""}
+
+        ${f ? `<section class="record reveal">
+          <div class="tilt" id="tilt"><div class="tilt-in">${art(f.cover, f.title)}<div class="glare"></div></div></div>
+          <div class="record-info">
+            <p class="kicker">The ${esc(f.type.toLowerCase())}</p>
+            <h2 class="record-title">${esc(f.title)}</h2>
+            <div class="rhead-meta">${f.date ? `<span>${new Date(f.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>` : ""}<span>${f.tracks.length} ${f.tracks.length === 1 ? "song" : "songs"}</span><span data-total="${f.key}"></span></div>
+            ${notes ? `<p class="notes">${esc(notes)}</p>` : ""}
+            <ol class="mini-tl">${f.tracks.map((t, i) => `<li class="tl-row" data-song="${esc(t.id)}" data-rel="${f.key}" data-i="${i}"><span class="n"><span class="num">${String(i + 1).padStart(2, "0")}</span><span class="pi">${P}</span></span><span class="name">${esc(t.title)}</span><span class="d" data-dur="${esc(t.id)}">${fmt(dur[t.id])}</span></li>`).join("")}</ol>
+            <a class="txt-act" href="#/r/${f.key}">Open ${esc(f.type.toLowerCase())}</a>
+          </div>
+        </section>` : ""}
+
+        ${fv && fv.video ? `<section class="cinema reveal" data-video="${esc(fv.id)}">
+          <video class="cinema-bg" src="${esc(fv.video)}" muted loop playsinline preload="none"></video>
+          <div class="cinema-frame"><video src="${esc(fv.video)}" ${f.cover ? `poster="${esc(f.cover)}"` : ""} muted loop playsinline preload="none"></video><span class="cinema-play">${P}</span></div>
+          <div class="cinema-cap"><p class="kicker">${esc(fv.videoLabel || "Video")}</p><h2>${esc(fv.title)}</h2><p class="hint-s">Tap to watch with sound</p></div>
+        </section>` : ""}
+
+        ${releases.length > 1 ? shelf("Albums", albumsL.map(card).join("")) + shelf(albumsL.length ? "Singles" : "Discography", singlesL.map(card).join("")) : ""}
+        ${videos.filter((v) => v !== videoOfSong(fv && fv.id)).length ? shelf("Videos", videos.slice(0, 8).map(vcard).join(""), videos.length > 8 ? "#/videos" : "") : ""}
         ${events.length ? `<section class="shelf"><div class="shelf-head"><h2>Events</h2></div><ul class="events">${events.map((e) => {
           const d = e.date ? new Date(e.date + "T00:00:00") : null;
           return `<li><div class="ev-date">${d ? `<b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB", { month: "short" })}</span>` : "<b>TBA</b>"}</div>
@@ -290,14 +329,40 @@
     $("#tb-title").textContent = title;
     $$("[data-nav]").forEach((a) => a.classList.toggle("on", a.dataset.nav === name));
     main.scrollTo(0, 0); scrollTo(0, 0);
-    renderLibrary(); totals(); mark(); fitGiant(); lastLine = -2; syncLyrics(true);
+    renderLibrary(); totals(); mark(); fitGiant(); lastLine = -2; syncLyrics(true); enhance();
     if (document.fonts) document.fonts.ready.then(fitGiant);
     onScroll();
   }
   addEventListener("hashchange", () => { closeFull(true); route(); });
 
+  /* ---------- Home motion: parallax hero, tilting cover, cinema preview, reveals ---------- */
+  let io2;
+  function enhance() {
+    const tilt = $("#tilt");
+    if (tilt && matchMedia("(hover: hover)").matches) {
+      const inner = $(".tilt-in", tilt), glare = $(".glare", tilt);
+      tilt.onmousemove = (e) => {
+        const r = tilt.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        inner.style.transform = `rotateY(${x * 16}deg) rotateX(${-y * 16}deg)`;
+        glare.style.background = `radial-gradient(circle at ${50 + x * 100}% ${50 + y * 100}%, rgba(255,255,255,0.22), transparent 55%)`;
+      };
+      tilt.onmouseleave = () => { inner.style.transform = ""; glare.style.background = ""; };
+    }
+    io2?.disconnect();
+    io2 = new IntersectionObserver((es) => es.forEach((en) => {
+      if (en.target.classList.contains("reveal")) { if (en.isIntersecting) en.target.classList.add("in"); return; }
+      en.isIntersecting ? en.target.play().catch(() => {}) : en.target.pause();
+    }), { threshold: 0.15 });
+    $$(".reveal, .cinema video").forEach((el) => io2.observe(el));
+  }
+  function parallax(y) {
+    const m = $("#hero-media"), c = $("#hero-content"); if (!m) return;
+    m.style.transform = `translate3d(0, ${y * 0.35}px, 0) scale(${1.05 + y * 0.0003})`;
+    c.style.transform = `translate3d(0, ${y * 0.15}px, 0)`; c.style.opacity = Math.max(0, 1 - y / 500);
+  }
+
   const topbar = $("#topbar");
-  function onScroll() { const y = innerWidth <= 800 ? scrollY : main.scrollTop; topbar.classList.toggle("solid", y > 220); }
+  function onScroll() { const y = innerWidth <= 800 ? scrollY : main.scrollTop; topbar.classList.toggle("solid", y > ($("#hero") ? $("#hero").offsetHeight - 80 : 220)); parallax(y); }
   main.addEventListener("scroll", onScroll, { passive: true });
   addEventListener("scroll", onScroll, { passive: true });
 
