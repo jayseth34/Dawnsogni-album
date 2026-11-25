@@ -5,28 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dawn Sogni</title>
   <meta name="description" content="Music and lyrics." />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#3a0710" />
   <link rel="icon" type="image/png" href="assets/ds-logo-sm.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="top">
-    <a href="#/" class="logo" aria-label="Home"><img src="assets/ds-logo-dark.png" alt="Dawn Sogni" /></a>
-    <a class="shop" id="shop" href="#" target="_blank" rel="noopener" hidden>Shop ↗</a>
-  </header>
+  <!-- ambient red light -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-cover" id="bg-cover"></div>
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span>
+  </div>
 
-  <main id="view"></main>
+  <div class="app">
+    <main id="view"></main>
+  </div>
 
-  <footer class="player" id="player" hidden>
-    <div class="bar" id="seek"><div class="fill" id="fill"></div></div>
-    <img class="p-cover" id="p-cover" alt="" />
-    <div class="p-meta" id="p-meta"><div class="p-title" id="p-title"></div><div class="p-time" id="p-time">0:00 / 0:00</div></div>
-    <div class="p-ctrl">
-      <button id="prev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12 18 18V6z"/></svg></button>
-      <button id="play" class="p-play" aria-label="Play"><svg viewBox="0 0 24 24"><path id="play-ico" d="M8 5v14l11-7z"/></svg></button>
-      <button id="next" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
-    </div>
-  </footer>
+  <!-- mini player -->
+  <div class="mini glass" id="mini" hidden>
+    <div class="mini-fill" id="mini-fill"></div>
+    <img class="mini-cover" id="mini-cover" alt="" />
+    <div class="mini-meta" id="mini-meta"><div class="mini-title" id="mini-title"></div><div class="mini-sub" id="mini-sub">Now playing</div></div>
+    <button class="circle-btn" id="mini-play" aria-label="Play"><svg viewBox="0 0 24 24"><path class="ico-pp" d="M8 5v14l11-7z"/></svg></button>
+  </div>
 
   <script src="app.js"></script>
 </body>
