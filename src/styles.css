@@ -638,3 +638,23 @@ body::before { background: linear-gradient(180deg, rgba(8,8,8,0.25), rgba(8,8,8,
   .fp-cm { padding: 16px 14px 24px; }
   .cm-sec { padding: 20px 16px; }
 }
+/* albums – mobile alignment */
+.alx-dots { display: none; }
+@media (max-width: 600px) {
+  .alx { min-height: 0; padding: 18px 0 22px; }
+  .alx-top { grid-template-columns: 1fr 1fr; row-gap: 2px; padding: 10px 14px 9px; }
+  .alx-top h1 { grid-column: 1 / -1; order: -1; text-align: center; font-size: 22px; }
+  .alx-top span { font-size: 10px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alx-top span:first-of-type { text-align: left; }
+  .alx-chips { margin-top: 14px; }
+  .alx-row { grid-template-columns: 1fr; justify-items: center; margin-top: 20px; gap: 0; }
+  .alx-side { display: none; }
+  .alx-card { width: min(74vw, 290px); max-width: none; }
+  .alx-card h2 { font-size: 30px; }
+  .alx-dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin: 18px 24px 0; }
+  .alx-dots button { width: 6px; height: 6px; padding: 0; border-radius: 999px; background: rgba(242,239,235,0.35); transition: width 0.3s var(--ease), background 0.3s; }
+  .alx-dots button.on { width: 20px; background: var(--text); }
+  .alx-nav { margin-top: 14px; }
+}
+@media (max-width: 600px) { .alx-card { width: min(68vw, 280px); } }
+@media (max-width: 600px) and (max-height: 760px) { .alx-card { width: min(62vw, 250px); } .alx-row { margin-top: 16px; } }

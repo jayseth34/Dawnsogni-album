@@ -45,7 +45,7 @@ const CATS = [['all', 'All'], ['Album', 'Albums'], ['EP', 'EPs'], ['Single', 'Si
       <span>{{ content.raw().artist.name || 'Dawn Sogni' }} {{ span() }}</span>
     </div>
 
-    @if (cats().length > 1) {
+    @if (cats().length > 2) {
       <div class="alx-chips" role="tablist">@for (c of cats(); track c[0]) {
         <button role="tab" [class.on]="cat() === c[0]" (click)="cat.set(c[0])">{{ c[1] }}</button>
       }</div>
@@ -83,11 +83,16 @@ const CATS = [['all', 'All'], ['Album', 'Albums'], ['EP', 'EPs'], ['Single', 'Si
         }</div>
       </div>
 
+      @if (list().length > 1 && list().length <= 20) {
+        <div class="alx-dots">@for (x of list(); track x.id) { <button [class.on]="$index === idx()" (click)="go($index)" [attr.aria-label]="x.displayTitle"></button> }</div>
+      }
+      @if (list().length > 1) {
       <div class="alx-nav">
         <button (click)="go(idx() - 1)" [disabled]="idx() === 0" aria-label="Previous">←</button>
         <span>{{ idx() + 1 }} / {{ list().length }}</span>
         <button (click)="go(idx() + 1)" [disabled]="idx() >= list().length - 1" aria-label="Next">→</button>
       </div>
+      }
     } @else {
       <p class="alx-empty">Nothing here yet.</p>
     }
