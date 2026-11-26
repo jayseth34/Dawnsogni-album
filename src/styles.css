@@ -627,3 +627,14 @@ body::before { background: linear-gradient(180deg, rgba(8,8,8,0.25), rgba(8,8,8,
 .acm li p { margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .acm small { color: var(--muted); margin-left: 6px; }
 @media (max-width: 760px) { .cm-av { width: 34px; height: 34px; font-size: 14px; } .cm-fields input.cm-name { max-width: none; } }
+/* comments – alignment fixes */
+.fp-cm { padding: 18px 18px 24px; }
+.cm-list li > div:last-child { flex: 1; min-width: 0; }
+@media (max-width: 760px) {
+  .cm-form > .cm-av { display: none; }
+  .cm-fields input.cm-name, .cm-fields textarea { border-radius: 12px; padding: 11px 14px; font-size: 16px; }
+  .cm-bar .btn.sm { padding: 0 22px; }
+  .cm-count { margin-top: 16px; }
+  .fp-cm { padding: 16px 14px 24px; }
+  .cm-sec { padding: 20px 16px; }
+}
