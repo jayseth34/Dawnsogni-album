@@ -11,13 +11,18 @@
       "title": "DS-001",
       "type": "Album",
       "status": "released",
-      "published": false,
+      "published": true,
       "featured": false,
       "releaseDate": "2026-11-27T00:00",
       "description": "",
       "cover": "media/20261126040635-fbaf9784-a9df-4c2c-a0b8-effe1973a671.jpg",
       "teaserArt": "",
-      "credits": [],
+      "credits": [
+        {
+          "role": "Composed",
+          "name": "Jay Seth"
+        }
+      ],
       "tracks": [
         {
           "id": "we-dont-blend-t",
