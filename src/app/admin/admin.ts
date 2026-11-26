@@ -41,7 +41,7 @@ const STATUSES: [ReleaseStatus, string][] = [['teaser', 'Teaser — mystery art,
             <div><b>{{ r.title || 'Untitled' }}</b><small>{{ r.type }} · {{ statusLabel(r.status) }}{{ r.published ? '' : ' · hidden' }}{{ r.featured ? ' · ★' : '' }}</small></div>
           </button>
         }
-        <p class="hint small">Signed in to {{ owner }}/{{ repo }} · <a href="javascript:void 0" (click)="forget()">sign out</a></p>
+        <p class="hint small">Signed in to {{ owner }}/{{ repo }} · <a href="javascript:void 0" (click)="copyToken()">{{ copied() ? 'token copied ✓' : 'copy token' }}</a> · <a href="javascript:void 0" (click)="forget()">sign out</a></p>
       </aside>
 
       <main class="adm-main">
@@ -193,6 +193,12 @@ export class Admin {
       this.connected.set(true); this.rev.update((n) => n + 1);
       if (this.data.releases[0]) this.sel.set(this.data.releases[0].id);
     } catch (er: any) { this.err.set(er.status === 401 ? 'Token rejected — check it and try again.' : 'Error: ' + er.message); }
+  }
+  copied = signal(false);
+  async copyToken() {
+    try { await navigator.clipboard.writeText(this.token); }
+    catch { const t = document.createElement('textarea'); t.value = this.token; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+    this.copied.set(true); setTimeout(() => this.copied.set(false), 2000);
   }
   forget() { localStorage.removeItem('dsadmin_token'); location.reload(); }
 
