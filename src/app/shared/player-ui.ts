@@ -28,10 +28,13 @@ import { CommentsService } from '../core/comments.service';
           <div><h2>{{ content.title(c.t, c.r) }}@if (c.t.explicit) { <span class="exp">E</span> }</h2><p>{{ content.raw().artist.name }}@if (p.isPreview()) { <span class="pv">30s preview</span> }</p></div>
           <button class="icon-btn lg like" [class.on]="lib.isLiked(c.t.id)" (click)="like()" aria-label="Like"><ds-ico [name]="lib.isLiked(c.t.id) ? 'heart' : 'heartO'" /></button>
         </div>
-        <div class="wave" (click)="seek($event)" role="slider" aria-label="Seek" [attr.aria-valuenow]="p.pos()">
-          @for (h of p.peaks(); track $index) { <i [class.on]="$index / p.peaks().length < p.progress()" [style.--h]="h"></i> }
+        <div class="wave" [class.dragging]="sc.drag() !== null" tabindex="0" role="slider" aria-label="Seek"
+             [attr.aria-valuemin]="0" [attr.aria-valuemax]="p.length()" [attr.aria-valuenow]="sc.time()" [attr.aria-valuetext]="fmt(sc.time())"
+             (pointerdown)="sc.down($event)" (pointermove)="sc.move($event)" (pointerup)="sc.up($event)" (pointercancel)="sc.cancel()" (keydown)="sc.key($event)">
+          @for (h of p.peaks(); track $index) { <i [class.on]="$index / p.peaks().length < sc.frac()" [style.--h]="h"></i> }
+          <span class="wave-head" [style.left.%]="sc.frac() * 100"><em>{{ fmt(sc.time()) }}</em></span>
         </div>
-        <div class="fp-times"><span>{{ fmt(p.pos()) }}</span><span>{{ fmt(p.length()) }}</span></div>
+        <div class="fp-times"><span>{{ fmt(sc.time()) }}</span><span>-{{ fmt(p.length() - sc.time()) }}</span></div>
         <div class="fp-ctrl">
           <button class="icon-btn" [class.on]="p.shuffle()" (click)="p.shuffle.set(!p.shuffle())" aria-label="Shuffle"><ds-ico name="shuffle" /></button>
           <button class="icon-btn lg" (click)="p.prev()" aria-label="Previous"><ds-ico name="prev" /></button>
@@ -105,7 +108,7 @@ export class PlayerFull {
     document.addEventListener('touchmove', (e) => { if ((e.target as HTMLElement).closest?.('.lyrics-box')) this.lastScroll = Date.now(); }, { passive: true });
     effect(() => document.body.classList.toggle('fp-open', this.p.open()));
   }
-  seek(e: MouseEvent) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); this.p.seek((e.clientX - r.left) / r.width); }
+  sc = new Scrubber(this.p);
   jump(t: number) { if (!this.p.isPreview()) this.p.audio.currentTime = t; }
   like() { const id = this.c()!.t.id; this.ui.toast(this.lib.toggle('liked', id) ? 'Added to Liked tracks' : 'Removed from Liked tracks'); }
   goAlbum() { this.p.open.set(false); this.router.navigate(['/album', this.c()!.r.id]); }
@@ -121,8 +124,10 @@ export class PlayerFull {
       <ds-art class="mini-art" [src]="c.r.displayCover" />
       <div class="mini-t"><b>{{ content.title(c.t, c.r) }}</b><small>{{ content.raw().artist.name }}@if (p.isPreview()) { · preview }</small></div>
       <div class="mini-seek" (click)="$event.stopPropagation()">
-        <span>{{ fmt(p.pos()) }}</span>
-        <div class="bar" (click)="seek($event)"><i [style.width.%]="p.progress() * 100"></i></div>
+        <span>{{ fmt(sc.time()) }}</span>
+        <div class="bar" [class.dragging]="sc.drag() !== null" tabindex="0" role="slider" aria-label="Seek" [attr.aria-valuenow]="sc.time()"
+             (pointerdown)="sc.down($event)" (pointermove)="sc.move($event)" (pointerup)="sc.up($event)" (pointercancel)="sc.cancel()" (keydown)="sc.key($event)">
+          <i [style.width.%]="sc.frac() * 100"></i><b [style.left.%]="sc.frac() * 100"></b></div>
         <span>{{ fmt(p.length()) }}</span>
       </div>
       <div class="mini-ctrl" (click)="$event.stopPropagation()">
@@ -137,7 +142,7 @@ export class PlayerFull {
 export class PlayerMini {
   p = inject(PlayerService); content = inject(ContentService); lib = inject(LibraryService); ui = inject(UiService);
   c = this.p.current; fmt = fmt;
-  seek(e: MouseEvent) { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); this.p.seek((e.clientX - r.left) / r.width); }
+  sc = new Scrubber(this.p);
   like() { const id = this.c()!.t.id; this.ui.toast(this.lib.toggle('liked', id) ? 'Added to Liked tracks' : 'Removed from Liked tracks'); }
 }
 
@@ -190,4 +195,34 @@ export class Overlays {
   }
   addTo(pid: string, tid: string) { this.lib.addToPlaylist(pid, tid); this.ui.picker.set(null); this.ui.toast('Added to playlist'); }
   newPl(e: Event, tid: string) { e.preventDefault(); const i = (e.target as HTMLFormElement).elements.namedItem('n') as HTMLInputElement; this.lib.createPlaylist(i.value, [tid]); this.ui.picker.set(null); this.ui.toast('Playlist created'); }
+}
+
+
+/** Drag-to-seek: preview while dragging, seek on release. */
+class Scrubber {
+  drag = signal<number | null>(null);
+  private el: HTMLElement | null = null;
+  constructor(private p: PlayerService) {}
+  frac = computed(() => this.drag() ?? this.p.progress());
+  time = computed(() => this.frac() * this.p.length());
+  private at(e: PointerEvent) { const r = this.el!.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); }
+  down(e: PointerEvent) {
+    if (e.button > 0 || !this.p.length()) return;
+    this.el = e.currentTarget as HTMLElement; this.el.setPointerCapture(e.pointerId);
+    e.preventDefault(); this.drag.set(this.at(e));
+  }
+  move(e: PointerEvent) { if (this.drag() !== null && this.el) this.drag.set(this.at(e)); }
+  up(e: PointerEvent) {
+    const f = this.drag(); if (f === null) return;
+    if (this.el) this.drag.set(this.at(e));
+    this.p.seek(this.drag()!); this.drag.set(null); this.el = null;
+  }
+  cancel() { this.drag.set(null); this.el = null; }
+  key(e: KeyboardEvent) {
+    const L = this.p.length(); if (!L) return;
+    const step = e.shiftKey ? 15 : 5; let t = this.p.pos();
+    if (e.key === 'ArrowRight') t += step; else if (e.key === 'ArrowLeft') t -= step;
+    else if (e.key === 'Home') t = 0; else if (e.key === 'End') t = L - 1; else return;
+    e.preventDefault(); e.stopPropagation(); this.p.seek(Math.min(1, Math.max(0, t / L)));
+  }
 }
