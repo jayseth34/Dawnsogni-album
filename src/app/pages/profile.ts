@@ -30,7 +30,7 @@ import { Art, Ico, ReleaseCard } from '../shared/shared';
 
   @if (top().length) {
     <section class="shelf"><header><h3>Your top tracks</h3></header>
-      <ol class="top">@for (x of top(); track x.t.id; let i = $index) {
+      <ol class="toplist">@for (x of top(); track x.t.id; let i = $index) {
         <li (click)="player.playList(topIds(), x.t.id)"><span class="n">{{ i + 1 }}</span><ds-art [src]="x.r.displayCover" /><div><b>{{ content.title(x.t, x.r) }}</b><small>{{ x.r.displayTitle }}</small></div><span class="muted">{{ mins(x.sec) }}</span></li>
       }</ol></section>
   }

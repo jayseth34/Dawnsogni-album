@@ -61,7 +61,7 @@ const CATS = [['all', 'All'], ['Album', 'Albums'], ['EP', 'EPs'], ['Single', 'Si
         }</div>
 
         @for (k of [r.id]; track k) {
-          <a class="alx-card" [routerLink]="['/album', r.id]">
+          <a class="alx-card" [routerLink]="['/album', r.id]"><span class="alx-in">
             <ds-art [src]="r.displayCover" [alt]="r.displayTitle" />
             <span class="alx-shade"></span>
             <h2>{{ r.displayTitle }}</h2>
@@ -72,7 +72,7 @@ const CATS = [['all', 'All'], ['Album', 'Albums'], ['EP', 'EPs'], ['Single', 'Si
               </button>
             }
             <span class="alx-see">See album ↗</span>
-          </a>
+          </span></a>
         }
 
         <div class="alx-side right">@for (x of after(); track x.r.id) {
