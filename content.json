@@ -11,7 +11,7 @@
       "title": "DS-001",
       "type": "Album",
       "status": "released",
-      "published": true,
+      "published": false,
       "featured": false,
       "releaseDate": "2026-11-27T00:00",
       "description": "",
