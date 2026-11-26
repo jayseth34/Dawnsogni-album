@@ -439,3 +439,56 @@ ds-player-mini { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; }
   .g2, .g3 { grid-template-columns: 1fr; } .adm-status { display: none; }
 }
 .acard > .abtn { align-self: flex-start; }
+
+/* ---------- albums carousel ---------- */
+.alx { position: relative; overflow: hidden; border-radius: 18px; background: #0b0b0b; min-height: min(680px, calc(100vh - 150px)); padding: 34px 0 30px; display: flex; flex-direction: column; isolation: isolate; box-shadow: 0 40px 90px -40px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(255,255,255,0.04); font-family: "Oswald", var(--font, sans-serif); }
+.alx-fire { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.alx::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(8,8,8,0.55), transparent 30%, transparent 75%, rgba(8,8,8,0.5)); pointer-events: none; }
+.alx-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 28px; text-transform: uppercase; font-size: 12px; letter-spacing: 0.04em; font-weight: 500; }
+.alx-top span:last-child { text-align: right; }
+.alx-top h1 { font-family: "Oswald"; font-weight: 700; font-size: 22px; letter-spacing: 0.02em; }
+.alx-chips { display: flex; width: fit-content; margin: 22px auto 0; border: 1px solid rgba(242,239,235,0.55); }
+.alx-chips button { padding: 6px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: var(--text); border-left: 1px solid rgba(242,239,235,0.55); transition: 0.2s; font-family: "Oswald"; }
+.alx-chips button:first-child { border-left: 0; }
+.alx-chips button.on { background: var(--text); color: var(--black); }
+.alx-chips button:not(.on):hover { background: rgba(242,239,235,0.12); }
+.alx-row { flex: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; margin-top: 30px; min-height: 0; }
+.alx-side { display: flex; gap: 20px; overflow: hidden; align-self: start; padding-top: 36px; }
+.alx-side.left { justify-content: flex-end; }
+.alx-side.left .alx-spine:first-child { margin-left: 0; }
+.alx-spine { flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text); opacity: 0.88; transition: opacity 0.25s, transform 0.35s var(--ease); }
+.alx-spine:hover { opacity: 1; transform: translateY(-4px); }
+.alx-thumb { width: 52px; height: 84px; overflow: hidden; display: block; box-shadow: 0 10px 22px -8px rgba(0,0,0,0.8); }
+.alx-thumb .art, .alx-thumb img, .alx-card .art, .alx-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.alx-vt { writing-mode: vertical-rl; font-family: "Oswald"; font-weight: 500; font-size: 26px; line-height: 1; text-transform: uppercase; white-space: nowrap; max-height: 230px; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 14px rgba(0,0,0,0.45); }
+.alx-card { position: relative; width: clamp(220px, 21vw, 270px); aspect-ratio: 0.72; overflow: hidden; display: block; color: #fff; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.9); animation: alx-in 0.45s var(--ease); }
+.alx-card > ds-art, .alx-thumb > ds-art { display: block; width: 100%; height: 100%; }
+.alx-card img { transition: transform 0.8s var(--ease); }
+.alx-card:hover img { transform: scale(1.05); }
+.alx-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.55), transparent 35%, transparent 60%, rgba(0,0,0,0.7)); }
+.alx-card h2 { position: absolute; top: 14px; left: 14px; right: 14px; font-family: "Oswald"; font-weight: 700; font-size: clamp(26px, 2.6vw, 34px); line-height: 0.98; text-transform: uppercase; text-align: center; letter-spacing: 0.01em; text-shadow: 0 2px 18px rgba(0,0,0,0.5); }
+.alx-meta { position: absolute; left: 14px; bottom: 16px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.85; }
+.alx-see { position: absolute; right: 14px; bottom: 14px; font-size: 13px; text-transform: uppercase; font-weight: 500; }
+.alx-play { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 58px; height: 58px; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; opacity: 0; scale: 0.85; transition: 0.3s var(--ease); box-shadow: 0 10px 30px -6px rgba(var(--red-rgb), 0.8); }
+.alx-card:hover .alx-play, .alx-play:focus-visible { opacity: 1; scale: 1; }
+.alx-nav { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 22px; font-size: 12px; letter-spacing: 0.1em; }
+.alx-nav button { font-size: 30px; line-height: 1; color: var(--text); padding: 4px 8px; transition: transform 0.2s, opacity 0.2s; font-family: system-ui, sans-serif; font-weight: 200; }
+.alx-nav button:hover:not(:disabled) { transform: translateX(var(--d, 0)); }
+.alx-nav button:first-child { --d: -4px; } .alx-nav button:last-child { --d: 4px; }
+.alx-nav button:disabled { opacity: 0.3; cursor: default; }
+.alx-empty { margin: auto; color: var(--muted); font-size: 18px; text-transform: uppercase; }
+@keyframes alx-in { from { opacity: 0; transform: scale(0.94); } }
+@media (max-width: 760px) {
+  .alx { border-radius: 14px; min-height: calc(100vh - 210px); padding-top: 22px; }
+  .alx-top { padding: 0 16px; font-size: 10px; }
+  .alx-top h1 { font-size: 20px; }
+  .alx-chips { margin: 16px auto 0; max-width: calc(100% - 24px); overflow-x: auto; }
+  .alx-chips button { padding: 6px 11px; font-size: 11px; white-space: nowrap; }
+  .alx-row { gap: 12px; margin-top: 22px; }
+  .alx-side { gap: 12px; padding-top: 20px; }
+  .alx-spine { width: 34px; gap: 8px; }
+  .alx-thumb { width: 34px; height: 56px; }
+  .alx-vt { font-size: 18px; max-height: 160px; }
+  .alx-card { width: 58vw; max-width: 240px; }
+  .alx-play { opacity: 1; scale: 1; width: 50px; height: 50px; }
+}
