@@ -14,9 +14,9 @@
       "published": true,
       "featured": false,
       "releaseDate": "2026-11-25T00:00",
-      "description": "Hey i am we dont blend teaser",
+      "description": "",
       "cover": "media/20261126040635-fbaf9784-a9df-4c2c-a0b8-effe1973a671.jpg",
-      "teaserArt": "media/20261126043718-fbaf9784-a9df-4c2c-a0b8-effe1973a671.jpg",
+      "teaserArt": "",
       "credits": [],
       "tracks": [
         {
@@ -29,7 +29,7 @@
           "credits": ""
         }
       ],
-      "exclusive": true,
+      "exclusive": false,
       "accessHash": "c98d08a4c3fcc83b8d8244ae8b353e50f115e8ba81f47b42bc3c018a06cc9b2e"
     }
   ]
