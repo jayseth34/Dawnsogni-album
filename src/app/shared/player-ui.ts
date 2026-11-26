@@ -5,10 +5,12 @@ import { LibraryService } from '../core/library.service';
 import { PlayerService } from '../core/player.service';
 import { UiService, fmt, parseLyrics } from '../core/ui.service';
 import { Art, Ico } from './shared';
+import { Comments } from './comments';
+import { CommentsService } from '../core/comments.service';
 
 /* ---------------- Full-screen player ---------------- */
 @Component({
-  selector: 'ds-player-full', standalone: true, imports: [Art, Ico],
+  selector: 'ds-player-full', standalone: true, imports: [Art, Ico, Comments],
   template: `
   @if (c(); as c) {
   <div class="fp" [class.open]="p.open()" [class.playing]="p.playing()" role="dialog" aria-label="Now playing">
@@ -40,6 +42,7 @@ import { Art, Ico } from './shared';
         <div class="fp-tabs">
           <button [class.on]="tab() === 'lyrics'" (click)="tab.set('lyrics')"><ds-ico name="lyrics" />Lyrics</button>
           <button [class.on]="tab() === 'queue'" (click)="tab.set('queue')"><ds-ico name="queue" />Queue</button>
+          @if (cm.enabled() && c.r.stage !== 'teaser') { <button [class.on]="tab() === 'comments'" (click)="tab.set('comments')"><ds-ico name="chat" />Comments</button> }
         </div>
       </div>
 
@@ -55,6 +58,8 @@ import { Art, Ico } from './shared';
               </div>
             } @else { <p class="muted">No lyrics for this track yet.</p> }
           </div>
+        } @else if (tab() === 'comments' && cm.enabled()) {
+          <div class="fp-cm"><ds-comments [track]="c.t.id" /></div>
         } @else {
           <div class="queue">
             <h4>Now playing</h4>
@@ -78,7 +83,7 @@ import { Art, Ico } from './shared';
 export class PlayerFull {
   p = inject(PlayerService); content = inject(ContentService); lib = inject(LibraryService); ui = inject(UiService); router = inject(Router);
   c = this.p.current; fmt = fmt;
-  tab = signal<'lyrics' | 'queue'>('lyrics');
+  tab = signal<'lyrics' | 'queue' | 'comments'>('lyrics'); cm = inject(CommentsService);
   lyr = viewChild<ElementRef<HTMLElement>>('lyr');
   lyrics = computed(() => parseLyrics(this.c()?.t.lyrics));
   line = computed(() => {

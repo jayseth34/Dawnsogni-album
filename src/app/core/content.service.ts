@@ -82,7 +82,7 @@ function normalize(c: any): SiteContent {
   if (!c) return EMPTY;
   const out: SiteContent = {
     artist: { ...EMPTY.artist, ...(c.artist || {}) },
-    shopUrl: c.shopUrl || c.brand?.shopUrl || '', instagram: c.instagram || c.brand?.instagram || '',
+    shopUrl: c.shopUrl || c.brand?.shopUrl || '', instagram: c.instagram || c.brand?.instagram || '', commentsUrl: c.commentsUrl || '',
     releases: Array.isArray(c.releases) ? c.releases : []
   };
   // older format: a flat list of songs → one single per song

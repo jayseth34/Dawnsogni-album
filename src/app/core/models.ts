@@ -39,6 +39,7 @@ export interface SiteContent {
   artist: { name: string; tagline?: string };
   shopUrl?: string;
   instagram?: string;
+  commentsUrl?: string;
   releases: Release[];
 }
 

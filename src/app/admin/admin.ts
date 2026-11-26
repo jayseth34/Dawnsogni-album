@@ -1,4 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
+import { CommentsService, SongComment, ago } from '../core/comments.service';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BRANCH, OWNER, REPO, sha256 } from '../core/content.service';
 import { Release, ReleaseStatus, ReleaseType, SiteContent, Track } from '../core/models';
@@ -35,6 +36,7 @@ const STATUSES: [ReleaseStatus, string][] = [['teaser', 'Teaser — mystery art,
       <aside class="adm-side">
         <button class="abtn red full" (click)="newRelease()">+ New release</button>
         <button class="rel-item" [class.on]="sel() === 'settings'" (click)="sel.set('settings')"><b>Artist & settings</b><small>Name, tagline, links</small></button>
+        <button class="rel-item" [class.on]="sel() === 'comments'" (click)="openComments()"><b>Comments</b><small>{{ d().commentsUrl ? 'Read & delete' : 'Not set up yet' }}</small></button>
         @for (r of d().releases; track r.id) {
           <button class="rel-item" [class.on]="sel() === r.id" (click)="sel.set(r.id)">
             <img [src]="src(r.cover || r.teaserArt)" alt="" onerror="this.style.visibility='hidden'" />
@@ -54,6 +56,28 @@ const STATUSES: [ReleaseStatus, string][] = [['teaser', 'Teaser — mystery art,
               <label>Shop link<input [value]="d().shopUrl || ''" (input)="d().shopUrl = v($event); touch()" /></label>
               <label>Instagram link<input [value]="d().instagram || ''" (input)="d().instagram = v($event); touch()" /></label>
             </div>
+          </section>
+          <section class="acard">
+            <h2>Song comments</h2>
+            <p class="hint">Paste the Google Apps Script Web app link (ends with <b>/exec</b>), then Publish. Leave empty to hide comments.</p>
+            <label>Comments link<input [value]="d().commentsUrl || ''" (input)="d().commentsUrl = v($event).trim(); touch()" placeholder="https://script.google.com/macros/s/…/exec" /></label>
+          </section>
+        } @else if (sel() === 'comments') {
+          <section class="acard">
+            <div class="ahead"><h2>Comments</h2>@if (d().commentsUrl) { <button class="abtn ghost" (click)="loadComments()">Refresh</button> }</div>
+            @if (!d().commentsUrl) { <p class="hint">Add the Comments link in Artist & settings first.</p> }
+            @else {
+              <div class="arow"><input type="password" placeholder="Admin key (ADMIN_KEY from the script)" [value]="ckey()" (input)="ckey.set(v($event))" /><button class="abtn" (click)="saveKey()">{{ keyOk() ? 'Saved ✓' : 'Save key' }}</button></div>
+              @if (cmErr()) { <p class="aerr">{{ cmErr() }}</p> }
+              @if (cms() === null) { <p class="hint">Loading…</p> }
+              @else {
+                <p class="hint">{{ cms()!.length }} comments</p>
+                <ul class="acm">@for (x of cms(); track x.id) {
+                  <li><div><b>{{ x.name }}</b> <small>on {{ trackName(x.track) }} · {{ ago(x.time) }}</small><p>{{ x.text }}</p></div>
+                    <button class="abtn ghost sm" (click)="delComment(x)">Delete</button></li>
+                } @empty { <li class="hint">No comments yet.</li> }</ul>
+              }
+            }
           </section>
         } @else if (rel(); as r) {
           <section class="acard">
@@ -195,6 +219,32 @@ export class Admin {
     } catch (er: any) { this.err.set(er.status === 401 ? 'Token rejected — check it and try again.' : 'Error: ' + er.message); }
   }
   copied = signal(false);
+  cmsvc = inject(CommentsService); ago = ago;
+  cms = signal<SongComment[] | null>(null); cmErr = signal('');
+  ckey = signal(localStorage.getItem('dsadmin_ckey') || ''); keyOk = signal(false);
+  openComments() { this.sel.set('comments'); if (this.d().commentsUrl) this.loadComments(); }
+  async loadComments() {
+    this.cms.set(null); this.cmErr.set('');
+    try { this.cms.set(await this.cmsvc.all(this.d().commentsUrl!)); } catch { this.cmErr.set('Could not reach the comments link.'); this.cms.set([]); }
+  }
+  async saveKey() {
+    this.cmErr.set('');
+    try {
+      const j = await this.cmsvc.adminPost(this.d().commentsUrl!, { action: 'check', key: this.ckey() });
+      if (!j.ok) { this.cmErr.set('That key doesn\'t match ADMIN_KEY in the script.'); return; }
+      localStorage.setItem('dsadmin_ckey', this.ckey()); this.keyOk.set(true); setTimeout(() => this.keyOk.set(false), 2000);
+    } catch { this.cmErr.set('Could not reach the comments link.'); }
+  }
+  async delComment(x: SongComment) {
+    if (!this.ckey()) { this.cmErr.set('Enter and save your admin key first.'); return; }
+    if (!confirm(`Delete this comment by ${x.name}?`)) return;
+    try {
+      const j = await this.cmsvc.adminPost(this.d().commentsUrl!, { action: 'delete', id: x.id, key: this.ckey() });
+      if (!j.ok) { this.cmErr.set(j.error || 'Delete failed'); return; }
+      this.cms.set((this.cms() || []).filter((c) => c.id !== x.id));
+    } catch { this.cmErr.set('Delete failed — try again.'); }
+  }
+  trackName(id: string) { for (const r of this.d().releases) for (const t of r.tracks) if (t.id === id) return t.title || r.title; return id; }
   async copyToken() {
     try { await navigator.clipboard.writeText(this.token); }
     catch { const t = document.createElement('textarea'); t.value = this.token; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
@@ -284,7 +334,7 @@ export class Admin {
 }
 
 function migrate(c: any): SiteContent {
-  const out: SiteContent = { artist: { name: 'Dawn Sogni', tagline: 'A different frequency', ...(c.artist || {}) }, shopUrl: c.shopUrl || c.brand?.shopUrl || '', instagram: c.instagram || c.brand?.instagram || '', releases: c.releases || [] };
+  const out: SiteContent = { artist: { name: 'Dawn Sogni', tagline: 'A different frequency', ...(c.artist || {}) }, shopUrl: c.shopUrl || c.brand?.shopUrl || '', instagram: c.instagram || c.brand?.instagram || '', commentsUrl: c.commentsUrl || '', releases: c.releases || [] };
   if (!c.releases && Array.isArray(c.songs)) out.releases = c.songs.filter((s: any) => s.audio && s.title).map((s: any) => ({
     id: s.id, title: s.title, type: 'Single', status: 'released', published: true, releaseDate: (s.date || s.releaseDate || '') ? (s.date || s.releaseDate) + 'T00:00' : '',
     cover: s.cover || '', teaserArt: '', description: '', credits: [], tracks: [{ id: s.id + '-t', title: s.title, audio: s.audio, lyrics: s.lyrics || '' }]

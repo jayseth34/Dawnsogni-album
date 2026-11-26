@@ -16,6 +16,7 @@ export const ICONS: Record<string, string> = {
   more: 'M5 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z',
   queue: 'M3 6h12v2H3zm0 5h12v2H3zm0 5h8v2H3zm14-5v6.2a3 3 0 1 0 2 2.8V9h3V6h-5z',
   lyrics: 'M4 4h16v12H7l-3 3zm3 4v2h10V8zm0 4v2h7v-2z',
+  chat: 'M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 4v-4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm3 5v2h10V9zm0 4v2h6v-2z',
   down: 'M12 16 6 10l1.4-1.4L12 13.2l4.6-4.6L18 10z', back: 'M15.5 4 7.5 12l8 8 1.4-1.4L10.3 12l6.6-6.6z',
   share: 'M18 16a3 3 0 0 0-2.4 1.2l-6.8-3.4a3 3 0 0 0 0-1.6l6.8-3.4A3 3 0 1 0 15 7l-6.8 3.4a3 3 0 1 0 0 3.2L15 17a3 3 0 1 0 3-1z',
   save: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z',

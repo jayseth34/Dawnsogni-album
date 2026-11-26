@@ -7,9 +7,12 @@ import { PlayerService } from '../core/player.service';
 import { UiService, fmtLong, parseLyrics } from '../core/ui.service';
 import { Art, Countdown, Ico, ReleaseCard, Status, TrackRow } from '../shared/shared';
 import { calendarFile } from './releases';
+import { Comments } from '../shared/comments';
+import { CommentsService } from '../core/comments.service';
+import { ViewRelease } from '../core/models';
 
 @Component({
-  selector: 'ds-album', standalone: true, imports: [RouterLink, DatePipe, Art, Ico, Status, Countdown, TrackRow, ReleaseCard],
+  selector: 'ds-album', standalone: true, imports: [RouterLink, DatePipe, Art, Ico, Status, Countdown, TrackRow, ReleaseCard, Comments],
   template: `
   @if (r(); as r) {
     <div class="al-bg"><ds-art [src]="r.displayCover" /></div>
@@ -75,6 +78,17 @@ import { calendarFile } from './releases';
           }
         </section>
       }
+
+      @if (r.stage !== 'teaser' && r.showTracklist && r.tracks.length && cm.enabled()) {
+        <section class="credits cm-sec" id="comments"><h3>Comments</h3>
+          @if (r.tracks.length > 1) {
+            <div class="chips cm-chips">@for (t of r.tracks; track t.id) {
+              <button [class.on]="cmTrack(r) === t.id" (click)="cmSel.set(t.id)">{{ content.title(t, r) }}</button>
+            }</div>
+          }
+          <ds-comments [track]="cmTrack(r)" />
+        </section>
+      }
     }
 
     @if (more().length) {
@@ -87,6 +101,8 @@ import { calendarFile } from './releases';
 })
 export class Album {
   id = input<string>(''); t = input<string>('');
+  cm = inject(CommentsService); cmSel = signal('');
+  cmTrack = (r: ViewRelease) => { const ids = r.tracks.map((x) => x.id); const s = this.cmSel() || this.t(); return ids.includes(s) ? s : ids[0]; };
   content = inject(ContentService); lib = inject(LibraryService); player = inject(PlayerService); ui = inject(UiService);
   r = computed(() => this.content.release(this.id()));
   locked = computed(() => !!this.r() && this.content.isLocked(this.r()!));
